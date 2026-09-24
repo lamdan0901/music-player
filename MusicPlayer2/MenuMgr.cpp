@@ -455,6 +455,8 @@ void MenuMgr::CreateMenu(MenuBase& menu)
         menu.AppendItem(EX_ID(ID_SORT_BY_TRACK));
         menu.AppendItem(EX_ID(ID_SORT_BY_LISTEN_TIME));
         menu.AppendItem(EX_ID(ID_SORT_BY_MODIFIED_TIME));
+        menu.AppendSeparator();
+        menu.AppendItem(EX_ID(ID_RESET_CUSTOM_ORDER));
         break;
     case MenuMgr::MainPlaylistDispModeMenu:
         menu.CreateMenu(true, true);
@@ -719,6 +721,7 @@ void MenuMgr::CreateMenu(MenuBase& menu)
         menu.AppendSeparator();
         menu.AppendItem(EX_ID(ID_MOVE_PLAYLIST_ITEM_UP));
         menu.AppendItem(EX_ID(ID_MOVE_PLAYLIST_ITEM_DOWN));
+        menu.AppendItem(EX_ID(ID_RESET_CUSTOM_ORDER));
         menu.AppendSeparator();
         menu.AppendItem(EX_ID(ID_PLAYLIST_VIEW_ARTIST), IconMgr::IconType::IT_Artist);
         menu.AppendItem(EX_ID(ID_PLAYLIST_VIEW_ALBUM), IconMgr::IconType::IT_Album);

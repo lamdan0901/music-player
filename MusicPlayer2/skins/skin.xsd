@@ -1648,6 +1648,16 @@
     </xs:annotation>
     <xs:attributeGroup ref="sharedattr"></xs:attributeGroup>
     <xs:attributeGroup ref="listattr"></xs:attributeGroup>
+    <xs:attribute name="drag_reorder" type="xs:boolean" default="false">
+      <xs:annotation>
+        <xs:documentation>是否允许拖动选中的曲目以调整顺序（文件夹模式和媒体库模式下调整的顺序在重新载入后失效）。</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="single_click_play" type="xs:boolean" default="false">
+      <xs:annotation>
+        <xs:documentation>是否单击播放曲目（为false时双击播放）。按住Ctrl/Shift多选、拖动或点击行内按钮时不播放。</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
   </xs:complexType>
   <xs:complexType name="playlistIndicatorType">
     <xs:annotation>

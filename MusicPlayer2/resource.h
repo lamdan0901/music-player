@@ -1089,13 +1089,14 @@
 #define ID_SONGS_MULTI_VERSION_ITEM_START 33481
 #define ID_SONGS_MULTI_VERSION_ITEM_MAX 33511
 #define ID_LIST_ITEM_PREVIEW            33512
+#define ID_RESET_CUSTOM_ORDER           33513
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        694
-#define _APS_NEXT_COMMAND_VALUE         33513
+#define _APS_NEXT_COMMAND_VALUE         33514
 #define _APS_NEXT_CONTROL_VALUE         1387
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

@@ -107,14 +107,27 @@
     </stackElement>
   </panel>
     
+  <!--左侧导航面板（宽界面）-->
+  <panel id="ui_big_navigation_panel" width="180" margin-left="0">
+    <verticalLayout margin="4">
+      <horizontalLayout height="36">
+        <button key="closePanel" icon="menu" text="%(UI_TXT_CLOSE_NAVIGATION)" width="40"/>
+        <placeHolder/>
+      </horizontalLayout>
+      <navigationBar margin-top="4" margin-bottom="4" orientation="vertical" icon_type="icon_and_text" item_space="4" item_height="36" stack_element_id="ui_big_nav_stack_element" item_list="now_playing,play_queue,recently_played,folder,playlist,my_favourite,media_lib"/>
+      <button key="showSettingsPanel" show_text="true" height="36"/>
+    </verticalLayout>
+  </panel>
+
   <ui>
     <!--主界面-->
     <verticalLayout>
       <horizontalLayout>
         <!--左侧导航栏-->
-        <verticalLayout width="134" margin-top="4" margin-bottom="4">
-          <navigationBar margin="4" orientation="vertical" icon_type="icon_and_text" item_space="4" item_height="36" item_list="now_playing,play_queue,recently_played,folder,playlist,my_favourite,media_lib"/>
-          <button key="showSettingsPanel" height="36" margin-left="4" margin-right="4" show_text="true"/>
+        <verticalLayout width="48" margin-top="4" margin-bottom="4">
+          <button key="showPanel" panel_id="ui_big_navigation_panel" icon="menu" text="%(UI_TXT_OPEN_NAVIGATION)" width="40" height="36"/>
+          <navigationBar margin="4" orientation="vertical" icon_type="icon_only" item_space="4" item_height="36" stack_element_id="ui_big_nav_stack_element" item_list="now_playing,play_queue,recently_played,folder,playlist,my_favourite,media_lib"/>
+          <button key="showSettingsPanel" width="40" height="36"/>
         </verticalLayout>
         <stackElement margin-top="8" margin-left="16" margin-right="16" id="ui_big_nav_stack_element" related_stack_elements="ui_narraw_nav_stack_element">
           <!--正在播放-->
@@ -142,7 +155,7 @@
               <searchBox height="26" max-width="200" proportion="2"/>
             </horizontalLayout>
             <playlistIndicator height="30" margin-bottom="4"/>
-            <playlist item_height="30"/>
+            <playlist item_height="42" font_size="12" drag_reorder="true" single_click_play="true"/>
           </verticalLayout>
           <!--最近播放-->
           <verticalLayout>
@@ -312,7 +325,7 @@
               <searchBox height="26" max-width="200" proportion="2"/>
             </horizontalLayout>
             <playlistIndicator height="30" margin-bottom="4"/>
-            <playlist item_height="30"/>
+            <playlist item_height="42" font_size="12" drag_reorder="true" single_click_play="true"/>
           </verticalLayout>
           <!--最近播放-->
           <verticalLayout>

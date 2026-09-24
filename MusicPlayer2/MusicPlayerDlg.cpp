@@ -196,6 +196,7 @@ BEGIN_MESSAGE_MAP(CMusicPlayerDlg, CMainDialogBase)
     ON_COMMAND(ID_SORT_BY_TRACK, &CMusicPlayerDlg::OnSortByTrack)
     ON_COMMAND(ID_SORT_BY_LISTEN_TIME, &CMusicPlayerDlg::OnSortByListenTime)
     ON_COMMAND(ID_SORT_BY_MODIFIED_TIME, &CMusicPlayerDlg::OnSortByModifiedTime)
+    ON_COMMAND(ID_RESET_CUSTOM_ORDER, &CMusicPlayerDlg::OnResetCustomOrder)
     ON_COMMAND(ID_DELETE_FROM_DISK, &CMusicPlayerDlg::OnDeleteFromDisk)
     ON_REGISTERED_MESSAGE(WM_TASKBARCREATED, &CMusicPlayerDlg::OnTaskbarcreated)
     ON_COMMAND(ID_DISP_FILE_NAME, &CMusicPlayerDlg::OnDispFileName)
@@ -1616,6 +1617,8 @@ void CMusicPlayerDlg::SetMenuState(CMenu* pMenu)
     bool move_enable = playlist_mode && !m_searched && selete_valid;
     pMenu->EnableMenuItem(ID_MOVE_PLAYLIST_ITEM_UP, MF_BYCOMMAND | (move_enable ? MF_ENABLED : MF_GRAYED));
     pMenu->EnableMenuItem(ID_MOVE_PLAYLIST_ITEM_DOWN, MF_BYCOMMAND | (move_enable ? MF_ENABLED : MF_GRAYED));
+    bool has_custom_order = CPlayer::GetInstance().HasCustomOrder();
+    pMenu->EnableMenuItem(ID_RESET_CUSTOM_ORDER, MF_BYCOMMAND | (has_custom_order ? MF_ENABLED : MF_GRAYED));
 
     pMenu->CheckMenuItem(ID_CONTAIN_SUB_FOLDER, MF_BYCOMMAND | (CPlayer::GetInstance().IsContainSubFolder() ? MF_CHECKED : MF_UNCHECKED));
 
@@ -1677,7 +1680,7 @@ void CMusicPlayerDlg::SetMenuState(CMenu* pMenu)
     const CBitmap* bitmap_sort_up = theApp.m_menu_mgr.GetMenuBitmap(IconMgr::IconType::IT_Triangle_Up);
     const CBitmap* bitmap_sort_down = theApp.m_menu_mgr.GetMenuBitmap(IconMgr::IconType::IT_Triangle_Down);
     std::array<const CBitmap*, 8> pSortBitmap{};
-    switch (CPlayer::GetInstance().m_sort_mode)
+    switch (has_custom_order ? SM_UNSORT : CPlayer::GetInstance().m_sort_mode)     //使用自定义顺序时不显示排序方式图标
     {
     case SM_U_FILE: pSortBitmap[0] = bitmap_sort_up; break;
     case SM_D_FILE: pSortBitmap[0] = bitmap_sort_down; break;
@@ -3764,6 +3767,17 @@ void CMusicPlayerDlg::OnSortByModifiedTime()
     sort_mode = (sort_mode != SM_U_TIME) ? SM_U_TIME : SM_D_TIME;
     CPlayer::GetInstance().SortPlaylist();
     ShowPlayList();
+}
+
+
+void CMusicPlayerDlg::OnResetCustomOrder()
+{
+    //按当前排序方式重新排序，SortPlaylist会清除自定义顺序
+    if (CPlayer::GetInstance().HasCustomOrder())
+    {
+        CPlayer::GetInstance().SortPlaylist();
+        ShowPlayList();
+    }
 }
 
 

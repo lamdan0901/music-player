@@ -5,6 +5,7 @@
 #include "MusicPlayerDlg.h"
 #include "MusicPlayerCmdHelper.h"
 #include "SongMultiVersion.h"
+#include "TinyXml2Helper.h"
 
 std::wstring UiElement::Playlist::GetItemText(int row, int col)
 {
@@ -127,6 +128,8 @@ CWnd* UiElement::Playlist::GetCmdRecivedWnd()
 
 void UiElement::Playlist::OnDoubleClicked()
 {
+    if (single_click_play)      //单击已播放，双击时不再重复播放
+        return;
     ::SendMessage(AfxGetMainWnd()->GetSafeHwnd(), WM_COMMAND, ID_PLAY_ITEM, 0);
 }
 
@@ -274,6 +277,118 @@ bool UiElement::Playlist::IsItemMatchKeyWord(int row, const std::wstring& key_wo
             || theApp.m_chinese_pingyin_res.IsStringMatchWithPingyin(key_word, song_info.album));
     }
     return false;
+}
+
+void UiElement::Playlist::DrawScrollArea()
+{
+    AbstractListElement::DrawScrollArea();
+    //拖动排序时绘制插入位置指示线
+    if (dragging)
+    {
+        CRect rect_line{ m_scroll_area_rect };
+        rect_line.top = rect.top - scroll_offset + GetDropIndex(drag_pos) * ItemHeight() - ui->DPI(1);
+        rect_line.bottom = rect_line.top + ui->DPI(2);
+        DrawAreaGuard guard(&ui->GetDrawer(), rect);
+        ui->GetDrawer().FillRect(rect_line, ui->GetUIColors().color_text_heighlight, true);
+    }
+}
+
+bool UiElement::Playlist::LButtonDown(CPoint point)
+{
+    drag_pressed = false;
+    dragging = false;
+    click_play_row = -1;
+    bool rtn = AbstractListElement::LButtonDown(point);
+    if (!rtn || scrollbar_rect.PtInRect(point))
+        return rtn;
+    int row = GetListIndexByPoint(point);
+    bool point_in_btn{};
+    for (int i{}; i < GetHoverButtonCount(row); i++)
+    {
+        if (GetHoverButtonState(i).rect.PtInRect(point))
+            point_in_btn = true;
+    }
+    drag_start_pos = point;
+    //不处于搜索状态时允许拖动排序
+    if (drag_reorder && GetDisplayRowCount() == GetRowCount() && row >= 0 && IsItemSelected(row) && !point_in_btn)
+    {
+        drag_pressed = true;
+        mouse_pressed = false;      //拖动排序时不拖动滚动列表
+    }
+    //单击播放（按住Ctrl/Shift多选时除外），在鼠标抬起时播放
+    if (single_click_play && row >= 0 && !point_in_btn && !(GetKeyState(VK_CONTROL) & 0x80) && !(GetKeyState(VK_SHIFT) & 0x8000))
+        click_play_row = row;
+    return rtn;
+}
+
+bool UiElement::Playlist::MouseMove(CPoint point)
+{
+    //左键已在列表外松开（没有收到LButtonUp）时取消拖动
+    if (drag_pressed && !(GetKeyState(VK_LBUTTON) & 0x8000))
+        drag_pressed = dragging = false;
+
+    //按下后鼠标移动（拖动排序或拖动滚动列表）时取消单击播放
+    if (click_play_row >= 0 && (std::abs(point.x - drag_start_pos.x) > ui->DPI(4) || std::abs(point.y - drag_start_pos.y) > ui->DPI(4)))
+        click_play_row = -1;
+
+    if (drag_pressed)
+    {
+        if (!dragging && std::abs(point.y - drag_start_pos.y) > ui->DPI(4))
+        {
+            dragging = true;
+            mouse_pos = CPoint(-1, -1);     //拖动时不显示鼠标指向时的按钮
+            HideTooltip();
+        }
+        drag_pos = point;
+        return true;
+    }
+    return AbstractListElement::MouseMove(point);
+}
+
+bool UiElement::Playlist::GlobalLButtonUp(CPoint point)
+{
+    if (dragging && rect.PtInRect(point))
+    {
+        std::vector<int> indexes;
+        GetItemsSelected(indexes);
+        //插入位置为选中项时，顺延到其后第一个未选中的项
+        int dest = GetDropIndex(point);
+        while (dest < GetRowCount() && IsItemSelected(dest))
+            dest++;
+        int index = CPlayer::GetInstance().MoveItems(indexes, dest < GetRowCount() ? dest : -1);
+        if (index >= 0)
+        {
+            CMusicPlayerDlg* pMainWnd = CMusicPlayerDlg::GetInstance();
+            if (pMainWnd != nullptr)
+                pMainWnd->ShowPlayList(false);
+            //移动后选中移动的项目
+            std::vector<int> new_indexes;
+            for (size_t i{}; i < indexes.size(); i++)
+                new_indexes.push_back(index + static_cast<int>(i));
+            SetItemsSelected(new_indexes);
+            OnClicked();
+        }
+    }
+    //在按下的同一行上抬起时播放该曲目
+    if (click_play_row >= 0 && rect.PtInRect(point) && GetListIndexByPoint(point) == click_play_row)
+        ::SendMessage(AfxGetMainWnd()->GetSafeHwnd(), WM_COMMAND, ID_PLAY_ITEM, 0);
+    click_play_row = -1;
+    drag_pressed = false;
+    dragging = false;
+    return AbstractListElement::GlobalLButtonUp(point);
+}
+
+void UiElement::Playlist::FromXmlNode(tinyxml2::XMLElement* xml_node)
+{
+    AbstractListElement::FromXmlNode(xml_node);
+    CTinyXml2Helper::GetElementAttributeBool(xml_node, "drag_reorder", drag_reorder);
+    CTinyXml2Helper::GetElementAttributeBool(xml_node, "single_click_play", single_click_play);
+}
+
+int UiElement::Playlist::GetDropIndex(CPoint point)
+{
+    int index = (point.y - rect.top + scroll_offset + ItemHeight() / 2) / ItemHeight();
+    return std::clamp(index, 0, GetRowCount());
 }
 
 bool UiElement::Playlist::HasMultiVersion(int row) const

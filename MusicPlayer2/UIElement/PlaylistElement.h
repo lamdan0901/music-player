@@ -54,8 +54,15 @@ namespace UiElement
 
         virtual bool IsItemMatchKeyWord(int row, const std::wstring& key_word);
 
+        virtual void DrawScrollArea() override;
+        virtual bool LButtonDown(CPoint point) override;
+        virtual bool MouseMove(CPoint point) override;
+        virtual bool GlobalLButtonUp(CPoint point) override;
+        virtual void FromXmlNode(tinyxml2::XMLElement* xml_node) override;
+
     private:
         bool HasMultiVersion(int row) const;
+        int GetDropIndex(CPoint point);     //获取拖动排序时鼠标位置对应的插入位置（0~行数）
 
         //获取按钮的索引
         /*
@@ -71,5 +78,12 @@ namespace UiElement
 
     private:
         int last_highlight_row{ -1 };
+        bool drag_reorder{};        //是否允许拖动曲目排序
+        bool single_click_play{};   //是否单击播放曲目（否则双击播放）
+        int click_play_row{ -1 };   //单击播放时鼠标按下的行，-1表示不播放
+        bool drag_pressed{};        //是否在选中行上按下了鼠标左键
+        bool dragging{};            //是否正在拖动
+        CPoint drag_start_pos;      //鼠标按下时的位置
+        CPoint drag_pos;            //拖动时鼠标的位置
     };
 }

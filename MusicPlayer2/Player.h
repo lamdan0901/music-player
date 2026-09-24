@@ -510,6 +510,8 @@ public:
 
     //播放列表按照m_sort_mode排序（当is_init为false时，排序后重新查找正在播放的歌曲）
     void SortPlaylist(bool is_init = false);
+    //文件夹/媒体库模式下是否保存了拖动调整的自定义顺序
+    bool HasCustomOrder() const;
     //获取专辑封面
     void SearchAlbumCover();
 private:
@@ -519,6 +521,10 @@ private:
     void AlbumCoverResize();
     //初始化随机播放列表
     void InitShuffleList(int first_song = -1);
+    //获取当前文件夹/媒体库列表自定义顺序的保存路径（播放列表模式返回空）
+    wstring GetCustomOrderFilePath() const;
+    //按保存的自定义顺序重新排列播放列表，不在自定义顺序中的曲目保持原顺序排在最后
+    void ApplyCustomOrder();
 
 public:
     //查找匹配的外部专辑封面，并加载专辑封面

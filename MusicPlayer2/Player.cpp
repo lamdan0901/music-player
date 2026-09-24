@@ -14,6 +14,8 @@
 #include "CRecentList.h"
 #include "MediaLibHelper.h"
 #include "SongMultiVersion.h"
+#include "md5.h"
+#include <numeric>
 
 CPlayer CPlayer::m_instance;
 
@@ -325,7 +327,10 @@ void CPlayer::IniPlaylistComplate()
         m_sort_mode = SM_U_FILE;
     }
     if ((m_playlist_mode == PM_FOLDER || m_playlist_mode == PM_MEDIA_LIB) && m_playlist.size() > 1)
+    {
         SortPlaylist(true);
+        ApplyCustomOrder();
+    }
 
     if (!IsPlaylistEmpty())         // 播放列表初始化完成，根据m_index,m_current_position,m_thread_info.play还原播放状态
     {
@@ -1962,8 +1967,6 @@ int CPlayer::MoveItems(std::vector<int> indexes, int dest)
 {
     if (m_loading)
         return -1;
-    if (m_playlist_mode != PM_PLAYLIST)
-        return -1;
 
     if (std::find(indexes.begin(), indexes.end(), dest) != indexes.end())
         return -1;
@@ -2023,7 +2026,16 @@ int CPlayer::MoveItems(std::vector<int> indexes, int dest)
     else
         m_index = iter_play - m_playlist.begin();
 
-    m_sort_mode = SM_UNSORT;        // 修改会失去排序状态
+    if (m_playlist_mode == PM_PLAYLIST)
+    {
+        m_sort_mode = SM_UNSORT;        // 修改会失去排序状态
+    }
+    else    // 文件夹/媒体库模式不允许未排序，调整后的顺序保存为自定义顺序，重新载入时在排序后应用
+    {
+        wstring file_path = GetCustomOrderFilePath();
+        CCommon::CreateDir(theApp.m_config_dir + L"custom_order\\");
+        CPlaylistFile::SavePlaylistToFile(m_playlist, file_path);
+    }
     OnPlaylistChange();
     SaveCurrentPlaylist();
     return dest_index;
@@ -2269,6 +2281,11 @@ void CPlayer::SortPlaylist(bool is_init)
 
     if (!is_init)   // 由初始化完成方法调用时不重新查找index
     {
+        //手动排序时清除自定义顺序
+        wstring custom_order_file = GetCustomOrderFilePath();
+        if (!custom_order_file.empty())
+            DeleteFile(custom_order_file.c_str());
+
         //播放列表排序后，查找正在播放项目的序号
         for (int i{}; i < GetSongNum(); i++)
         {
@@ -2281,6 +2298,54 @@ void CPlayer::SortPlaylist(bool is_init)
     }
     OnPlaylistChange();
     SaveCurrentPlaylist();
+}
+
+bool CPlayer::HasCustomOrder() const
+{
+    wstring file_path = GetCustomOrderFilePath();
+    return !file_path.empty() && CCommon::FileExist(file_path);
+}
+
+wstring CPlayer::GetCustomOrderFilePath() const
+{
+    wstring key;
+    if (m_playlist_mode == PM_FOLDER)
+        key = L"folder|" + m_path;
+    else if (m_playlist_mode == PM_MEDIA_LIB)
+        key = L"medialib|" + std::to_wstring(static_cast<int>(m_media_lib_playlist_type)) + L"|" + m_media_lib_playlist_name;
+    else
+        return wstring();
+    MD5 md5;
+    md5.Update(key);
+    md5.Finalize();
+    return theApp.m_config_dir + L"custom_order\\" + CCommon::StrToUnicode(md5.HexDigest()) + L".playlist";
+}
+
+void CPlayer::ApplyCustomOrder()
+{
+    wstring file_path = GetCustomOrderFilePath();
+    if (file_path.empty() || !CCommon::FileExist(file_path))
+        return;
+    CPlaylistFile playlist_file;
+    playlist_file.LoadFromFile(file_path);
+    std::map<SongKey, int> order;
+    for (const auto& song : playlist_file.GetPlaylist())
+        order.emplace(SongKey(song), static_cast<int>(order.size()));
+    std::vector<int> ranks;
+    for (const auto& song : m_playlist)
+    {
+        auto iter = order.find(SongKey(song));
+        ranks.push_back(iter != order.end() ? iter->second : INT_MAX);  // 新增的曲目排在最后
+    }
+    // 按rank稳定排序，新增的曲目之间保持原排序方式的顺序，已移除的曲目自然被忽略
+    std::vector<size_t> indexes(m_playlist.size());
+    std::iota(indexes.begin(), indexes.end(), 0);
+    std::stable_sort(indexes.begin(), indexes.end(), [&](size_t a, size_t b) { return ranks[a] < ranks[b]; });
+    vector<SongInfo> playlist;
+    playlist.reserve(m_playlist.size());
+    for (size_t i : indexes)
+        playlist.push_back(std::move(m_playlist[i]));
+    m_playlist = std::move(playlist);
 }
 
 void CPlayer::OnExit()

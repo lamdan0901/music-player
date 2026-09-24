@@ -194,10 +194,12 @@ bool UiElement::Slider::LButtonUp(CPoint point)
 
 bool UiElement::Slider::LButtonDown(CPoint point)
 {
-    if (hover && IsEnable() && IsShown())
+    if ((hover || rect.PtInRect(point)) && IsEnable() && IsShown())
     {
         pressed = true;
         pos_mouse_pressed = GetCurPos();
+        //点击滑动条非把手区域时，直接跳转到点击位置，并可继续拖动
+        MouseMove(point);
         return true;
     }
     return false;
