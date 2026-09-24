@@ -34,6 +34,7 @@ void CUserUi::LoadFromContents(const std::string& xml_contents)
     m_ui_name = CCommon::StrToUnicode(CTinyXml2Helper::ElementAttribute(root, "name"), CodeType::UTF8_NO_BOM);
     m_icon = UiElementHelper::NameToIconType(CTinyXml2Helper::ElementAttribute(root, "icon"), IconMgr::IT_App);
     ReplaceUiStringRes(m_ui_name);
+    CTinyXml2Helper::GetElementAttributeBool(root, "smooth_scroll", m_smooth_scroll);
     std::string ui_index = CTinyXml2Helper::ElementAttribute(root, "index");
     if (!ui_index.empty())
         m_index = atoi(ui_index.c_str());

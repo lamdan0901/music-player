@@ -819,6 +819,11 @@
           <xs:documentation>图标。仅用于UI对话框。</xs:documentation>
         </xs:annotation>
       </xs:attribute>
+      <xs:attribute name="smooth_scroll" type="xs:boolean">
+        <xs:annotation>
+          <xs:documentation>界面中的列表、滚动区域使用鼠标滚轮滚动时是否以平滑动画的方式滚动。默认为false。</xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
       <xs:attributeGroup ref="sharedattr"></xs:attributeGroup>
       <!--引用属性组sharedattr-->
     </xs:complexType>

@@ -241,6 +241,7 @@ public:
     bool IsDrawTitleBar() const;        //是否需要绘制标题栏
     bool IsDrawMenuBar() const;         //是否需要绘制菜单栏
     bool IsDrawLargeIcon() const;        //是否绘制大图标
+    bool IsSmoothScroll() const { return m_smooth_scroll; }  //滚动区域是否使用平滑滚动
 
     static wstring GetDisplayFormatString();       //获取显示格式的字符串
 
@@ -306,6 +307,7 @@ protected:
     wstring m_info_tip;
 
     UIData& m_ui_data;
+    bool m_smooth_scroll{};                 //滚动区域是否使用平滑滚动（由界面xml的root节点smooth_scroll属性指定）
 
     //UI 数据
     CRect m_draw_rect;                      //绘图区域
@@ -324,6 +326,13 @@ private:
     CRect m_app_icon_rect{};        //标题栏应用图标区域
 
     bool m_skip_next_frame{};
+
+    //背景缓存（缩放后的背景图片叠加背景颜色的结果），以及生成缓存时的参数
+    CBitmap m_back_cache;
+    HBITMAP m_back_cache_src{};
+    CSize m_back_cache_size;
+    COLORREF m_back_cache_color{};
+    BYTE m_back_cache_alpha{};
 };
 
 //用于在UI中设置字体。

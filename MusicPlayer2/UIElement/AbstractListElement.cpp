@@ -505,7 +505,7 @@ bool UiElement::AbstractListElement::MouseWheel(int delta, CPoint point)
             lines = 3;
         if (lines < 1)
             lines = 1;
-        scroll_offset += (-delta * lines * ItemHeight() / 120);  //120为鼠标滚轮一行时delta的值
+        ScrollBy(-delta * lines * ItemHeight() / 120);  //120为鼠标滚轮一行时delta的值
         return true;
     }
     return false;

@@ -4576,8 +4576,9 @@ UINT CMusicPlayerDlg::UiThreadFunc(LPVOID lpParam)
         }
 
         //绘制主界面
+        bool smooth_scrolling = UiElement::AbstractScrollArea::IsSmoothScrolling();
         if (pThis->IsWindowVisible() && !pThis->IsIconic()
-            && (CPlayer::GetInstance().IsPlaying() || pPara->is_active_window || pPara->draw_reset || pPara->ui_force_refresh || CPlayer::GetInstance().m_loading || theApp.IsMeidaLibUpdating())
+            && (CPlayer::GetInstance().IsPlaying() || pPara->is_active_window || smooth_scrolling || pPara->draw_reset || pPara->ui_force_refresh || CPlayer::GetInstance().m_loading || theApp.IsMeidaLibUpdating())
             && (!pPara->is_completely_covered || theApp.m_nc_setting_data.always_on_top)
             )
             //窗口最小化、隐藏，以及窗口未激活并且未播放时不刷新界面，以降低CPU利用率
@@ -4621,7 +4622,9 @@ UINT CMusicPlayerDlg::UiThreadFunc(LPVOID lpParam)
         CPlayer::GetInstance().m_controls.UpdatePosition(CPlayer::GetInstance().GetCurrentPosition());
         pThis->m_fps_cnt++;
 
-        Sleep(pThis->m_ui_refresh_interval);
+        //平滑滚动动画进行时按显示器刷新率绘制（DwmFlush等待下一次桌面合成），使动画流畅；Sleep的精度约为15.6毫秒，无法满足要求
+        if (!smooth_scrolling || FAILED(DwmFlush()))
+            Sleep(pThis->m_ui_refresh_interval);
     }
     return 0;
 }

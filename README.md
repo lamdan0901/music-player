@@ -1,128 +1,137 @@
-**简体中文 | [English](./README_en-us.md)**
+**[简体中文](./README.md) | English**
 
 <a href="https://hellogithub.com/repository/zhongyang219/MusicPlayer2" target="_blank"><img src="https://api.hellogithub.com/v1/widgets/recommend.svg?rid=1ad354e5ab404301919665ac7973cd07&claim_uid=CeVqou2T1dIvfQP&theme=neutral" alt="Featured｜HelloGitHub" style="width: 250px; height: 54px;" width="250" height="54" /></a>
 
-# MusicPlayer2 简介
+# MusicPlayer2 Introduction
 
-MusicPlayer2是一款功能强大的本地音乐播放软件，旨在为用户提供最佳的本地音乐播放体验。它支持歌词显示、歌词卡拉OK样式显示、歌词在线下载、歌词编辑、歌曲标签识别、专辑封面显示、专辑封面在线下载、频谱分析、音效设置、任务栏缩略图按钮、主题颜色、格式转换等功能，支持高度自定义的界面布局，支持多种播放内核（BASS和FFMpeg）。播放器支持大部分常见的音频格式。
+MusicPlayer2 is a powerful local music player software designed to provide users with the best local music playback experience. It integrates a wide range of features including lyric display, karaoke-style lyric rendering, online lyric downloading, lyric editing, song tag recognition, album cover display, online album cover downloading, spectrum analysis, audio effect settings, taskbar thumbnail controls, theme colors, format conversion, and more. The player also offers highly customizable interface layouts and supports multiple playback kernels (BASS and FFMpeg). It is compatible with most common audio formats.
 
-# 相关链接：
+# Related Links
 
-请[点击此处](https://github.com/zhongyang219/MusicPlayer2/releases)下载MusicPlayer2的最新版本。
+Please [click here](https://github.com/zhongyang219/MusicPlayer2/releases)to download the latest version of MusicPlayer2.
 
-国内备用下载链接：[百度网盘下载](https://pan.baidu.com/s/1i5QNwFF)
+Alternate link: Download from [Baidu Netdisk](https://pan.baidu.com/s/1i5QNwFF)
 
-MusicPlayer2依赖于Microsoft Visual C++ 运行环境，如果程序启动时提示“找不到MSVC\*.dll”，请点击以下链接下载并安装Microsoft Visual C++ 运行环境。
+MusicPlayer2 relies on the Microsoft Visual C++ runtime environment. If the program prompts "Cannot find MSVC\*.dll" when the program starts, please click the link below to download and install the Microsoft Visual C++ runtime environment.
 
-[最新支持的 Visual C++ 可再发行程序包下载 | Microsoft Docs](https://docs.microsoft.com/zh-CN/cpp/windows/latest-supported-vc-redist?view=msvc-170)
+[Latest supported Visual C++ Redistributable downloads | Microsoft Docs](https://docs.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170)
 
-若使用 [Scoop](https://github.com/ScoopInstaller/Scoop) 作为包管理的用户，目前 MusicPlayer2 的安装包已加入 Scoop 官方 [Extras](https://github.com/ScoopInstaller/Extras) 仓库进行维护，可通过以下 Powershell 命令进行安装：
+If you are using [Scoop](https://github.com/ScoopInstaller/Scoop) as a package manager, the MusicPlayer2 installation package is now added to the Scoop official [Extras](https://github.com/ScoopInstaller) repository for maintenance. You can install MusicPlayer2 with the following Powershell command:
 
 ```pwsh
 scoop install extras/musicplayer2
 ```
 
-# 主要特性
+# Main Features
 
-* 歌词显示
-* 迷你模式
-* 歌词卡拉OK样式显示
-* 任务栏搜索框显示歌词
-* 桌面歌词显示
-* 歌词在线下载
-* 歌词编辑
-* 歌曲标签识别和编辑
-* 频谱分析
-* 专辑封面
-* 自动匹配下载歌词和专辑封面
-* 音效设置（均衡器和混响）
-* 任务栏缩略图按钮
-* 主题颜色
-* 支持cue分轨
-* 背景高斯模糊
-* 格式转换
-* 媒体库功能
-* xml自定义界面布局
+* Lyrics display
+* Mini mode
+* Lyrics karaoke style display
+* Show lyrics in the taskbar search box
+* Desktop lyrics display
+* Lyrics online download
+* lyrics editing
+* Song tag recognition and editing
+* Spectrum analysis
+* Album cover display
+* Auto match download lyrics and album cover
+* Sound effect settings (equalizer and reverb)
+* Taskbar thumbnail button
+* Theme color
+* Support for cue format
+* Background Gaussian Blur
+* Format conversion
+* Media library function
+* customize interface layouts by xml
 
-# 使用说明
+# Operating Instructions
 
-**[点击这里](https://github.com/zhongyang219/MusicPlayer2/wiki)查看说明文档。**
+You have the following ways to open and play a song:
 
-# 截图
+1. Select the "Open File" item on the File menu;
+2. Select the "Open folder" item on the File menu;
+3. Click the "Select Folder" button or select the "Select Folder" item on the "Tools" menu, select a recently played folder in the popped up dialog, or click the "Open new folder" button to play a new folder;
+4. Drag and drop the file or folder directly into the main window of the program;
+5. Drag and drop the file or folder directly onto the program's icon or its shortcut icon.
 
-播放器界面支持多种界面切换，支持深色和浅色模式。
+# Instructions for use
 
-主窗口（界面2 浅色模式）▼
+**[Click here](https://github.com/zhongyang219/MusicPlayer2/wiki) to view the documentation (Only Chinese Available).**
+
+# Screen shoots
+
+The player interface supports switching between multiple layouts, as well as dark and light modes.
+
+Main window (UI2, light mode)▼
 
 <img src="Screenshots/Main_window.png" style="zoom:80%;" />
 
-主窗口 （界面2 浅色模式 显示播放列表）▼
+Main window (UI2, light mode, show playlist)▼
 
 <img src="Screenshots/main_window_with_playlist.png" style="zoom:80%;" />
 
-主窗口（界面2 深色模式）▼
+Main window (UI2, dark mode)▼
 
 <img src="Screenshots/Main_window2.png" style="zoom:80%;" />
 
-主窗口（界面1）▼
+Main window (UI1)▼
 
 <img src="Screenshots/main_window_ui1.png" style="zoom:80%;" />
 
-主界面（界面2）▼
+Main window (UI2)▼
 
 <img src="Screenshots/main_window_ui2.png" style="zoom:80%;" />
 
-主窗口（界面3）▼
+Main window (UI3)▼
 
 <img src="Screenshots/main_window_ui3.png" style="zoom:80%;" />
 
-主窗口（界面4）▼
+Main window (UI4)▼
 
 <img src="Screenshots/main_window_ui4.png" style="zoom:80%;" />
 
-播放详情页（界面4）▼
+Playback detail page (UI4)▼
 
 <img src="Screenshots/main_window_ui4_detail.png" style="zoom:80%;" />
 
-主窗口（界面5）▼
+Main window (UI5)▼
 
 <img src="Screenshots/main_window_ui5.png" style="zoom:80%;" />
 
-主界面（Groove音乐风格Windows11）
+Main window (Groove Music Style Windows 11)
 
 <img src="Screenshots/main_window_ui_groove_music.png" style="zoom:80%;" />
 
-播放详情页（Groove音乐风格Windows11）
+Playback detail page (Groove Music Style Windows 11)
 
 <img src="Screenshots/main_window_ui_groove_music_detail.png" style="zoom:80%;" />
 
-迷你模式▼
+Mini mode▼
 
 <img src="Screenshots/Mini_mode.png" style="zoom:80%;" />
 
-Windows 10 搜索框显示歌词▼
+Show lyrics in Windows 10 search box▼
 
 <img src="Screenshots/Cortana_lyric.png" style="zoom:80%;" />
 
-桌面歌词▼
+Desktop lyrics▼
 
 <img src="Screenshots/desktop_lyric.jpg" style="zoom:80%;" />
 
-选项设置——外观设置▼
+Option settings - Appearance Settings▼
 
-<img src="Screenshots/options.png" style="zoom:80%;" />
+<img src="Screenshots/en_us/options.png" style="zoom:80%;" />
 
-选项设置——常规设置▼
+Option settings - General Settings▼
 
-<img src="Screenshots/options2.png" style="zoom:80%;" />
+<img src="Screenshots/en_us/options2.png" style="zoom:80%;" />
 
-# 更新日志
+# Update log
 
-**[点击此处查看更新日志](https://github.com/zhongyang219/MusicPlayer2/blob/master/Documents/update_log.md)**
+**[Click here to view the update log.](https://github.com/zhongyang219/MusicPlayer2/blob/master/Documents/update_log_en-us.md)**
 
-# 开发环境部署
+# Development Environment Setup
 
-MusicPlayer2仅支持Windows系统下开发和运行。要编译MusicPlayer2的源代码，需要安装Visual Studio 2022，安装时选择C++开发环境，并且必须勾选MFC。
+MusicPlayer2 only supports development and operation on Windows systems. To compile the source code of MusicPlayer2, you need to install Visual Studio 2022. During installation, select the C++ development environment, and you must check the option for MFC.
 
-安装好Visual Studio 2022之后打开解决方案文件`MusicPlayer2.sln`编译运行即可。
-
+After installing Visual Studio 2022, open the solution file `MusicPlayer2.sln`, compile it, and run the project.

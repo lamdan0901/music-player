@@ -2,6 +2,18 @@
 #include "AbstractScrollArea.h"
 #include "Layout.h"
 
+//平滑滚动动画的时间常数（毫秒），位移按指数曲线逼近目标，与Windows11媒体播放器的减速滚动效果类似
+#define SMOOTH_SCROLL_TIME_CONSTANT 60.0
+//平滑滚动时每次滚动的距离相对于普通滚动的比例
+#define SMOOTH_SCROLL_DISTANCE_RATIO 0.7
+
+std::atomic<long long> UiElement::AbstractScrollArea::smooth_scroll_until{};
+
+static long long SteadyClockMs()
+{
+    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+}
+
 void UiElement::AbstractScrollArea::Draw()
 {
     CalculateRect();
@@ -11,6 +23,7 @@ void UiElement::AbstractScrollArea::Draw()
     const int MIN_SCROLLBAR_LENGTH{ ui->DPI(16) };      //滚动条的最小长度
 
     //计算滚动区域的矩形区域
+    UpdateSmoothScroll();
     RestrictOffset();
     int scroll_area_height = GetScrollAreaHeight();
     bool show_scroll_bar = scroll_area_height > rect.Height();
@@ -190,7 +203,7 @@ bool UiElement::AbstractScrollArea::MouseWheel(int delta, CPoint point)
 {
     if (rect.PtInRect(point))
     {
-        scroll_offset += (-delta * ui->DPI(60) / 120);  //120为鼠标滚轮一行时delta的值
+        ScrollBy(-delta * ui->DPI(60) / 120);  //120为鼠标滚轮一行时delta的值
         return true;
     }
     return false;
@@ -203,6 +216,54 @@ bool UiElement::AbstractScrollArea::MouseLeave()
     scrollbar_hover = false;
     scrollbar_handle_pressed = false;
     return Element::MouseLeave();
+}
+
+void UiElement::AbstractScrollArea::ScrollBy(int distance)
+{
+    if (!ui->IsSmoothScroll())
+    {
+        scroll_offset += distance;
+        return;
+    }
+    if (!smooth_scrolling)
+    {
+        smooth_offset = scroll_offset;
+        smooth_target = scroll_offset;
+        smooth_written_offset = scroll_offset;
+        smooth_last_time = std::chrono::steady_clock::now();
+        smooth_scrolling = true;
+    }
+    distance = static_cast<int>(std::lround(distance * SMOOTH_SCROLL_DISTANCE_RATIO));
+    //目标位移限制在可滚动范围内，这样滚动到两端后反向滚动能立即响应
+    smooth_target = std::clamp(smooth_target + distance, 0, max(GetScrollAreaHeight() - rect.Height(), 0));
+    smooth_scroll_until = SteadyClockMs() + 500;
+}
+
+bool UiElement::AbstractScrollArea::IsSmoothScrolling()
+{
+    return SteadyClockMs() < smooth_scroll_until;
+}
+
+void UiElement::AbstractScrollArea::UpdateSmoothScroll()
+{
+    if (!smooth_scrolling)
+        return;
+    //滚动位移被其他操作（拖动、定位到当前播放等）改变，取消动画
+    if (scroll_offset != smooth_written_offset)
+    {
+        smooth_scrolling = false;
+        return;
+    }
+    auto now = std::chrono::steady_clock::now();
+    double elapsed = std::chrono::duration<double, std::milli>(now - smooth_last_time).count();
+    smooth_last_time = now;
+    smooth_offset += (smooth_target - smooth_offset) * (1.0 - std::exp(-elapsed / SMOOTH_SCROLL_TIME_CONSTANT));
+    if (std::abs(smooth_target - smooth_offset) < 0.5)
+    {
+        smooth_offset = smooth_target;
+        smooth_scrolling = false;
+    }
+    scroll_offset = smooth_written_offset = static_cast<int>(std::lround(smooth_offset));
 }
 
 void UiElement::AbstractScrollArea::RestrictOffset()

@@ -883,27 +883,52 @@ void CPlayerUIBase::DrawBackground()
     CRect draw_rect = m_draw_rect;
     draw_rect.MoveToXY(0, 0);
 
-    //绘制背景
-    if (theApp.m_app_setting_data.enable_background && m_ui_data.enable_background)
+    //获取背景图片
+    bool draw_image = theApp.m_app_setting_data.enable_background && m_ui_data.enable_background;
+    bool album_cover_back = draw_image && CPlayer::GetInstance().AlbumCoverExist() && theApp.m_app_setting_data.album_cover_as_background;
+    CSingleLock sync(&m_ui_data.default_background_sync, draw_image && !album_cover_back);
+    CImage* back_image{};
+    if (album_cover_back)
+        back_image = &(theApp.m_app_setting_data.background_gauss_blur ? CPlayer::GetInstance().GetAlbumCoverBlur() : CPlayer::GetInstance().GetAlbumCover());
+    else if (draw_image)
+        back_image = &m_ui_data.default_background;
+    HBITMAP back_bitmap = (back_image != nullptr ? static_cast<HBITMAP>(*back_image) : NULL);
+    BYTE alpha = IsDrawBackgroundAlpha() ? ALPHA_CHG(theApp.m_app_setting_data.background_transparency) : 255;
+
+    //缩放背景图片和叠加半透明背景颜色的开销较大（窗口较大时每帧超过10毫秒），因此将结果缓存起来，参数不变时直接复制，保证平滑滚动等动画的帧率
+    if (m_back_cache.GetSafeHandle() == NULL || back_bitmap != m_back_cache_src || draw_rect.Size() != m_back_cache_size
+        || m_colors.color_back != m_back_cache_color || alpha != m_back_cache_alpha)
     {
-        if (CPlayer::GetInstance().AlbumCoverExist() && theApp.m_app_setting_data.album_cover_as_background)
-        {
-            CImage& back_image{ theApp.m_app_setting_data.background_gauss_blur ? CPlayer::GetInstance().GetAlbumCoverBlur() : CPlayer::GetInstance().GetAlbumCover() };
-            m_draw.DrawBitmap(back_image, CPoint(0, 0), m_draw_rect.Size(), CDrawCommon::StretchMode::FILL);
-        }
+        m_back_cache.DeleteObject();
+        if (m_pDC == nullptr || !m_back_cache.CreateCompatibleBitmap(m_pDC, draw_rect.Width(), draw_rect.Height()))
+            return;
+        CDC cache_dc;
+        cache_dc.CreateCompatibleDC(m_pDC);
+        CBitmap* old_bitmap = cache_dc.SelectObject(&m_back_cache);
+        CDC* draw_dc = m_draw.GetDC();
+        m_draw.SetDC(&cache_dc);
+        //绘制背景
+        if (back_bitmap != NULL)
+            m_draw.DrawBitmap(back_bitmap, CPoint(0, 0), draw_rect.Size(), CDrawCommon::StretchMode::FILL);
+        //填充背景颜色
+        if (alpha != 255)
+            m_draw.FillAlphaRect(draw_rect, m_colors.color_back, alpha);
         else
-        {
-            CSingleLock sync(&m_ui_data.default_background_sync, TRUE);
-            //MemDC.FillSolidRect(0, 0, m_draw_rect.Width(), m_draw_rect.Height(), GetSysColor(COLOR_BTNFACE)); //给缓冲DC的绘图区域填充对话框的背景颜色
-            m_draw.DrawBitmap(m_ui_data.default_background, CPoint(0, 0), m_draw_rect.Size(), CDrawCommon::StretchMode::FILL);
-        }
+            m_draw.FillRect(draw_rect, m_colors.color_back);
+        m_draw.SetDC(draw_dc);
+        cache_dc.SelectObject(old_bitmap);
+
+        m_back_cache_src = back_bitmap;
+        m_back_cache_size = draw_rect.Size();
+        m_back_cache_color = m_colors.color_back;
+        m_back_cache_alpha = alpha;
     }
 
-    //填充背景颜色
-    if (IsDrawBackgroundAlpha())
-        m_draw.FillAlphaRect(draw_rect, m_colors.color_back, ALPHA_CHG(theApp.m_app_setting_data.background_transparency));
-    else
-        m_draw.FillRect(draw_rect, m_colors.color_back);
+    CDC cache_dc;
+    cache_dc.CreateCompatibleDC(m_pDC);
+    CBitmap* old_bitmap = cache_dc.SelectObject(&m_back_cache);
+    m_draw.GetDC()->BitBlt(0, 0, draw_rect.Width(), draw_rect.Height(), &cache_dc, 0, 0, SRCCOPY);
+    cache_dc.SelectObject(old_bitmap);
 }
 
 void CPlayerUIBase::DrawSongInfo(CRect rect, int font_size, bool reset)
