@@ -55,6 +55,7 @@
               <horizontalLayout margin-right="4">
                 <placeHolder/>
                 <volume show_text="true" width="64" height="28" margin="2"/>
+                <trackGain width="28" height="28" margin="2"/>
                 <button key="addToPlaylist" width="28" height="28" margin="2"/>
                 <button key="mediaLib" width="28" height="28" margin="2"/>
                 <button key="showPlayQueue" width="28" height="28" margin="2"/>
@@ -95,6 +96,7 @@
               <button key="playPause" width="40" height="40" bigIcon="true" margin="2"/>
               <button key="next" width="40" height="40" bigIcon="true" margin="2"/>
               <volume show_text="false" width="28" height="28" margin="2"/>
+              <trackGain width="28" height="28" margin="2"/>
               <button key="repeatMode" width="28" height="28" margin="2"/>
               <button key="favorite" width="28" height="28" margin="2"/>
               <button key="showPlayQueue" width="28" height="28" margin="2"/>
@@ -253,6 +255,7 @@
             <horizontalLayout margin-right="4">
               <placeHolder/>
               <volume show_text="true" width="64" height="28" margin="2"/>
+              <trackGain width="28" height="28" margin="2"/>
               <button key="addToPlaylist" width="28" height="28" margin="2"/>
               <button key="mediaLib" width="28" height="28" margin="2"/>
               <button key="showPlayQueue" width="28" height="28" margin="2"/>
@@ -413,6 +416,7 @@
             <button key="playPause" width="40" height="40" bigIcon="true" margin="2"/>
             <button key="next" width="40" height="40" bigIcon="true" margin="2"/>
             <volume show_text="false" width="28" height="28" margin="2"/>
+            <trackGain width="28" height="28" margin="2"/>
             <button key="repeatMode" width="28" height="28" margin="2"/>
             <button key="favorite" width="28" height="28" margin="2"/>
             <button key="showPlayQueue" width="28" height="28" margin="2"/>
@@ -449,6 +453,7 @@
             <button key="playPause" width="40" height="40" bigIcon="true" margin="2"/>
             <button key="next" width="40" height="40" bigIcon="true" margin="2"/>
             <volume show_text="false" width="26" height="26" margin="2"/>
+            <trackGain width="26" height="26" margin="2"/>
             <button key="showPlayQueue" width="26" height="26" margin="2"/>
           </horizontalLayout>
         </verticalLayout>

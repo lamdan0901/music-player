@@ -731,6 +731,7 @@
         <xs:element name="progressBar" type="progressBarType"></xs:element>
         <xs:element name="lyrics" type="lyricsType"></xs:element>
         <xs:element name="volume" type="volumeType"></xs:element>
+        <xs:element name="trackGain" type="trackGainType"></xs:element>
         <xs:element name="beatIndicator" type="beatIndicatorType"></xs:element>
         <xs:element name="placeHolder" type="placeHolderType"></xs:element>
         <xs:element name="playlist" type="playlistType"></xs:element>
@@ -1605,6 +1606,12 @@
         <xs:documentation> 点击音量图标后出现的音量调节按钮是否显示在音量图标的上方。默认显示在音量图标的下方。 </xs:documentation>
       </xs:annotation>
     </xs:attribute>
+    <xs:attributeGroup ref="sharedattr"></xs:attributeGroup>
+  </xs:complexType>
+  <xs:complexType name="trackGainType">
+    <xs:annotation>
+      <xs:documentation>曲目音量增益按钮，点击后在按钮上方弹出增益调节面板（-15~15dB，不修改文件）</xs:documentation>
+    </xs:annotation>
     <xs:attributeGroup ref="sharedattr"></xs:attributeGroup>
   </xs:complexType>
   <xs:complexType name="beatIndicatorType">

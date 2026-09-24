@@ -532,6 +532,7 @@ void CPlayer::MusicControl(Command command, int volume_step)
         cur_song.freq = m_pCore->GetFReq();
         cur_song.channels = m_pCore->GetChannels();
         SetVolume();
+        SetTrackGain(CSongDataManager::GetInstance().GetSongInfo3(cur_song).track_gain);
         if (std::fabs(m_speed - 1) > 0.01)
             SetSpeed(m_speed);
         SetPitch(m_pitch);
@@ -676,6 +677,12 @@ void CPlayer::SetVolume()
         GetPlayerCoreError(L"SetVolume");
         SendMessage(theApp.m_pMainWnd->m_hWnd, WM_VOLUME_CHANGED, 0, 0);
     }
+}
+
+void CPlayer::SetTrackGain(float db)
+{
+    if (m_player_core_inited && m_pCore != nullptr)
+        m_pCore->SetTrackGain(db);
 }
 
 void CPlayer::SetVolume(int volume)

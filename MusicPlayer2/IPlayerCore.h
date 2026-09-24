@@ -170,6 +170,7 @@ public:
     virtual void ApplyEqualizer(int channel, int gain) = 0; //设置均衡器（channel为均衡器通道，取值为0~9，gain为增益，取值为-15~15）
     virtual void SetReverb(int mix, int time) = 0;		//设置混响（mix为混响强度，取值为0~100，time为混响时间，取值为1~300，单位为10ms）
     virtual void ClearReverb() = 0;			//关闭混响
+    virtual void SetTrackGain(float db) {}  //设置当前曲目的音量增益（单位dB），不支持的内核忽略
     virtual void GetFFTData(float fft_data[FFT_SAMPLE]) = 0;       //获取频谱分析数据
 
     virtual int GetErrorCode() = 0;                         //获取错误代码

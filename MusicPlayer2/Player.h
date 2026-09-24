@@ -274,6 +274,8 @@ public:
     //用m_volume的值设置音量
     void SetVolume();
     void SetVolume(int volume);
+    //设置当前曲目的音量增益（单位dB），仅作用于播放，不保存
+    void SetTrackGain(float db);
 
     //计算频谱分析
     void CalculateSpectralData();

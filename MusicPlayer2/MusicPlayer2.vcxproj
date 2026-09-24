@@ -354,6 +354,7 @@
     <ClInclude Include="UIElement\TreeElement.h" />
     <ClInclude Include="UIElement\UIElement.h" />
     <ClInclude Include="UIElement\Volume.h" />
+    <ClInclude Include="UIElement\TrackGain.h" />
     <ClInclude Include="UiMediaLibItemMgr.h" />
     <ClInclude Include="MediaLibStatisticsDlg.h" />
     <ClInclude Include="MediaTransControls.h" />
@@ -602,6 +603,7 @@
     <ClCompile Include="UIElement\TreeElement.cpp" />
     <ClCompile Include="UIElement\UIElement.cpp" />
     <ClCompile Include="UIElement\Volume.cpp" />
+    <ClCompile Include="UIElement\TrackGain.cpp" />
     <ClCompile Include="UiMediaLibItemMgr.cpp" />
     <ClCompile Include="MediaLibStatisticsDlg.cpp" />
     <ClCompile Include="MediaTransControls.cpp" />

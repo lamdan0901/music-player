@@ -1044,6 +1044,9 @@
     <ClInclude Include="UIElement\Volume.h">
       <Filter>UIElement</Filter>
     </ClInclude>
+    <ClInclude Include="UIElement\TrackGain.h">
+      <Filter>UIElement</Filter>
+    </ClInclude>
     <ClInclude Include="UIElement\RecentPlayedList.h">
       <Filter>UIElement</Filter>
     </ClInclude>
@@ -1764,6 +1767,9 @@
       <Filter>UIElement</Filter>
     </ClCompile>
     <ClCompile Include="UIElement\Volume.cpp">
+      <Filter>UIElement</Filter>
+    </ClCompile>
+    <ClCompile Include="UIElement\TrackGain.cpp">
       <Filter>UIElement</Filter>
     </ClCompile>
     <ClCompile Include="UIElement\RecentPlayedList.cpp">

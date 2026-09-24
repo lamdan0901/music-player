@@ -252,6 +252,8 @@ void CBassCore::SetFXHandle()
     }
     //设置混响的句柄
     m_reverb_handle = BASS_ChannelSetFX(m_musicStream, BASS_FX_DX8_REVERB, 1);
+    //设置曲目音量增益的句柄
+    m_gain_handle = BASS_ChannelSetFX(m_musicStream, BASS_FX_VOLUME, 0);
 }
 
 void CBassCore::RemoveFXHandle()
@@ -271,6 +273,11 @@ void CBassCore::RemoveFXHandle()
     {
         BASS_ChannelRemoveFX(m_musicStream, m_reverb_handle);
         m_reverb_handle = 0;
+    }
+    if (m_gain_handle != 0)
+    {
+        BASS_ChannelRemoveFX(m_musicStream, m_gain_handle);
+        m_gain_handle = 0;
     }
 }
 
@@ -902,6 +909,13 @@ void CBassCore::ClearReverb()
     parareverb.fReverbTime = 0.001f;
     parareverb.fHighFreqRTRatio = 0.001f;
     BASS_FXSetParameters(m_reverb_handle, &parareverb);
+}
+
+void CBassCore::SetTrackGain(float db)
+{
+    float gain = std::pow(10.0f, db / 20.0f);
+    BASS_FX_VOLUME_PARAM param{ gain, gain, 0, 0 };
+    BASS_FXSetParameters(m_gain_handle, &param);
 }
 
 void CBassCore::GetFFTData(float fft_data[FFT_SAMPLE])

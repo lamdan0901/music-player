@@ -38,6 +38,8 @@ std::shared_ptr<UiElement::Element> UiElement::CElementFactory::CreateElement(co
         element = std::make_shared<UiElement::Lyrics>();
     else if (name == "volume")
         element = std::make_shared<UiElement::Volume>();
+    else if (name == "trackGain")
+        element = std::make_shared<UiElement::TrackGain>();
     else if (name == "beatIndicator")
         element = std::make_shared<UiElement::BeatIndicator>();
     else if (name == "playlist")

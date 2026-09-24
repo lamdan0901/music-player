@@ -709,6 +709,7 @@ IconMgr::IconType CPlayerUIBase::GetBtnIconType(BtnKey key)
     case BTN_SKIN_TITLEBAR:
         return IconMgr::IconType::IT_Skin;
     case BTN_EQ:
+    case BTN_TRACK_GAIN:
         return IconMgr::IconType::IT_Equalizer;
     case BTN_SETTING:
     case BTN_SETTING_TITLEBAR:
@@ -2708,6 +2709,9 @@ std::wstring CPlayerUIBase::GetItemTooltip(int tooltip_index)
     //显示设置面板
     case BTN_SHOW_SETTINGS_PANEL:
         return theApp.m_str_table.LoadText(L"UI_TIP_BTN_OPTION_SETTING");
+    //曲目音量增益
+    case BTN_TRACK_GAIN:
+        return theApp.m_str_table.LoadText(L"UI_TIP_BTN_TRACK_GAIN");
  }
     return std::wstring();
 }
