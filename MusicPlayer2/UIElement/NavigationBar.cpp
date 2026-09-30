@@ -50,10 +50,13 @@ void UiElement::NavigationBar::Draw()
             continue;
 
         //绘制背景
-        if (hover_index == index)
+        if (hover_index == index || (ui->IsMediaPlayerStyle() && orientation == Vertical && SelectedIndex() == index))
         {
             DrawAreaGuard guard(&ui->GetDrawer(), rect);
-            ui->DrawRectangle(item_rect, pressed ? ui->GetUIColors().color_button_pressed : ui->GetUIColors().color_button_hover);
+            COLORREF back_color = hover_index == index
+                ? (pressed ? ui->GetUIColors().color_button_pressed : ui->GetUIColors().color_button_hover)
+                : ui->GetUIColors().color_button_checked;
+            ui->DrawRectangle(item_rect, back_color);
         }
 
         //绘制图标
@@ -123,7 +126,7 @@ void UiElement::NavigationBar::Draw()
                 selected_indicator_rect.bottom -= ui->DPI(4);
                 selected_indicator_rect.right = selected_indicator_rect.left + ui->DPI(4);
             }
-            if (theApp.m_app_setting_data.button_round_corners)
+            if (theApp.m_app_setting_data.button_round_corners || ui->IsMediaPlayerStyle())
                 ui->GetDrawer().DrawRoundRect(selected_indicator_rect, ui->GetUIColors().color_text_heighlight, ui->DPI(2));
             else
                 ui->GetDrawer().FillRect(selected_indicator_rect, ui->GetUIColors().color_text_heighlight, true);

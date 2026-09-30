@@ -10,6 +10,8 @@
 #define SMOOTH_SCROLL_MIN_SPEED 0.12
 
 std::atomic<long long> UiElement::AbstractScrollArea::smooth_scroll_until{};
+std::mutex UiElement::AbstractScrollArea::smooth_scroll_mutex;
+std::condition_variable UiElement::AbstractScrollArea::smooth_scroll_cv;
 
 static long long SteadyClockMs()
 {
@@ -238,12 +240,22 @@ void UiElement::AbstractScrollArea::ScrollBy(int distance)
     distance = static_cast<int>(std::lround(distance * SMOOTH_SCROLL_DISTANCE_RATIO));
     //目标位移限制在可滚动范围内，这样滚动到两端后反向滚动能立即响应
     smooth_target = std::clamp(smooth_target + distance, 0, max(GetScrollAreaHeight() - rect.Height(), 0));
-    smooth_scroll_until = SteadyClockMs() + 500;
+    {
+        std::lock_guard<std::mutex> lock(smooth_scroll_mutex);
+        smooth_scroll_until = SteadyClockMs() + 500;
+    }
+    smooth_scroll_cv.notify_one();
 }
 
 bool UiElement::AbstractScrollArea::IsSmoothScrolling()
 {
     return SteadyClockMs() < smooth_scroll_until;
+}
+
+void UiElement::AbstractScrollArea::WaitForScroll(int timeout_ms)
+{
+    std::unique_lock<std::mutex> lock(smooth_scroll_mutex);
+    smooth_scroll_cv.wait_for(lock, std::chrono::milliseconds(timeout_ms), IsSmoothScrolling);
 }
 
 void UiElement::AbstractScrollArea::UpdateSmoothScroll()

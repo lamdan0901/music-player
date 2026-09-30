@@ -148,6 +148,8 @@ void UiElement::Slider::Draw()
     {
         handle_color = theApp.m_app_setting_data.theme_color.light2;
     }
+    if (ui->IsMediaPlayerStyle())
+        handle_color = ui->GetUIColors().color_button_hover;
     Gdiplus::RectF rect_handle_f = CreateScqureByPosAndSize(cur_point, handle_size);
     rect_handle = CGdiPlusTool::GdiplusRectToCRect(rect_handle_f);
     BYTE handle_alpha;
@@ -166,6 +168,8 @@ void UiElement::Slider::Draw()
         circle_color = theApp.m_app_setting_data.theme_color.light1;
     else
         circle_color = theApp.m_app_setting_data.theme_color.dark1;
+    if (ui->IsMediaPlayerStyle())
+        circle_color = ui->GetUIColors().color_spectrum;
     Gdiplus::RectF rect_circle = CreateScqureByPosAndSize(cur_point, circel_size);
     if (!theApp.m_app_setting_data.button_round_corners && CWinVersionHelper::IsWine())
         ui->GetDrawer().FillRect(CGdiPlusTool::GdiplusRectToCRect(rect_circle), circle_color);
@@ -263,6 +267,8 @@ bool UiElement::Slider::IsRectValid() const
 
 COLORREF UiElement::Slider::GetBackColor(bool highlight_color)
 {
+    if (ui->IsMediaPlayerStyle())
+        return highlight_color ? ui->GetUIColors().color_spectrum : ui->GetUIColors().color_progress_back;
     if (theApp.m_app_setting_data.dark_mode)
     {
         if (highlight_color)

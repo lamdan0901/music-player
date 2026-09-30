@@ -1,4 +1,4 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 #include "CPlayerUIBase.h"
 #include "MusicPlayerDlg.h"
 #include "MiniModeUserUi.h"
@@ -862,8 +862,33 @@ std::wstring CPlayerUIBase::GetButtonText(BtnKey key_type) const
 
 void CPlayerUIBase::PreDrawInfo()
 {
+    m_media_player_style = GetUiIndex() == 9;
     //设置颜色
     m_colors = CPlayerUIHelper::GetUIColors(theApp.m_app_setting_data.dark_mode, IsDrawBackgroundAlpha());
+    if (IsMediaPlayerStyle())
+    {
+        const COLORREF accent = RGB(255, 133, 42);
+        m_colors.color_text = RGB(255, 255, 255);
+        m_colors.color_text_lable = accent;
+        m_colors.color_text_2 = GRAY(190);
+        m_colors.color_text_heighlight = accent;
+        m_colors.color_text_disabled = GRAY(128);
+        m_colors.color_back = GRAY(38);
+        m_colors.color_panel_back = GRAY(50);
+        m_colors.color_lyric_back = GRAY(38);
+        m_colors.color_control_bar_back = GRAY(38);
+        m_colors.color_spectrum = accent;
+        m_colors.color_spectrum_cover = accent;
+        m_colors.color_progress_back = GRAY(128);
+        m_colors.color_button_back = GRAY(50);
+        m_colors.color_button_checked = GRAY(50);
+        m_colors.color_button_pressed = GRAY(70);
+        m_colors.color_button_hover = GRAY(60);
+        m_colors.color_stack_indicator = accent;
+        m_colors.color_scrollbar_handle = GRAY(150);
+        m_colors.color_list_selected = GRAY(65);
+        m_colors.color_statusbar_progress_back = GRAY(50);
+    }
 
     //设置绘制的矩形区域
     m_draw_rect = CRect(0, 0, m_ui_data.draw_area_width, m_ui_data.draw_area_height);
@@ -1057,7 +1082,7 @@ void CPlayerUIBase::DrawRectangle(const CRect& rect, bool no_corner_radius, bool
     COLORREF fill_color{};
     if (color_mode == RCM_DARK)
     {
-        fill_color = CColorConvert::m_gray_color.dark3;
+        fill_color = IsMediaPlayerStyle() ? GRAY(32) : CColorConvert::m_gray_color.dark3;
         if (draw_background)
             alpha = 108;
     }
@@ -1083,7 +1108,7 @@ void CPlayerUIBase::DrawRectangle(const CRect& rect, bool no_corner_radius, bool
         }
     }
 
-    if (!theApp.m_app_setting_data.button_round_corners || no_corner_radius)
+    if ((!theApp.m_app_setting_data.button_round_corners && !IsMediaPlayerStyle()) || no_corner_radius)
         m_draw.FillAlphaRect(rect, fill_color, alpha);
     else
     {
@@ -1093,7 +1118,7 @@ void CPlayerUIBase::DrawRectangle(const CRect& rect, bool no_corner_radius, bool
 
 void CPlayerUIBase::DrawRectangle(CRect rect, COLORREF color, BYTE alpha)
 {
-    if (!theApp.m_app_setting_data.button_round_corners)
+    if (!theApp.m_app_setting_data.button_round_corners && !IsMediaPlayerStyle())
         m_draw.FillAlphaRect(rect, color, alpha, true);
     else
         m_draw.DrawRoundRect(rect, color, CalculateRoundRectRadius(rect), alpha);
@@ -1161,9 +1186,11 @@ void CPlayerUIBase::DrawUIButton(const CRect& rect, UIButton& btn, IconMgr::Icon
 
     //绘制的是否为关闭按钮（关闭按钮需要特别处理）
     bool is_close_btn = (&btn == &m_buttons[BTN_CLOSE] || &btn == &m_buttons[BTN_APP_CLOSE]);
+    bool media_play_button = IsMediaPlayerStyle() && big_icon && text.empty()
+        && (icon_type == IconMgr::IT_Play || icon_type == IconMgr::IT_Pause || icon_type == IconMgr::IT_Play_Pause);
 
     //绘制背景
-    if (btn.enable && (btn.pressed || btn.hover || checked || btn_background))
+    if (!media_play_button && btn.enable && (btn.pressed || btn.hover || checked || btn_background))
     {
         BYTE alpha;
         if (!is_close_btn && IsDrawBackgroundAlpha())
@@ -1189,13 +1216,33 @@ void CPlayerUIBase::DrawUIButton(const CRect& rect, UIButton& btn, IconMgr::Icon
             else
                 back_color = m_colors.color_button_back;
         }
-        if (!theApp.m_app_setting_data.button_round_corners)
+        if (!theApp.m_app_setting_data.button_round_corners && !IsMediaPlayerStyle())
             m_draw.FillAlphaRect(rc_tmp, back_color, alpha, true);
         else
             m_draw.DrawRoundRect(rc_tmp, back_color, CalculateRoundRectRadius(rc_tmp), alpha);
     }
 
     CRect rect_icon{ rc_tmp };
+    if (media_play_button)
+    {
+        int size = (std::min)(rc_tmp.Width(), rc_tmp.Height()) - DPI(4);
+        if (size > DPI(6))
+        {
+            CPoint center = rc_tmp.CenterPoint();
+            CRect ring(center.x - size / 2, center.y - size / 2, center.x - size / 2 + size, center.y - size / 2 + size);
+            BYTE ring_alpha = btn.enable ? (btn.hover || btn.pressed ? 255 : 220) : 96;
+            Gdiplus::LinearGradientBrush brush(Gdiplus::Point(ring.left, ring.top), Gdiplus::Point(ring.right, ring.bottom),
+                Gdiplus::Color(ring_alpha, 255, 159, 88), Gdiplus::Color(ring_alpha, 183, 105, 207));
+            auto* graphics = m_draw.GetGraphics();
+            auto smoothing = graphics->GetSmoothingMode();
+            graphics->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
+            graphics->FillEllipse(&brush, ring.left, ring.top, ring.Width(), ring.Height());
+            graphics->SetSmoothingMode(smoothing);
+            ring.DeflateRect(DPI(2), DPI(2));
+            COLORREF fill = btn.pressed ? m_colors.color_button_pressed : btn.hover ? m_colors.color_button_hover : m_colors.color_control_bar_back;
+            m_draw.DrawEllipse(ring, btn.enable ? fill : m_colors.color_button_back);
+        }
+    }
     if (icon_type != IconMgr::IT_NO_ICON)
     {
         //计算图标矩形区域
@@ -1214,7 +1261,12 @@ void CPlayerUIBase::DrawUIButton(const CRect& rect, UIButton& btn, IconMgr::Icon
 
         //绘制图标
         IconMgr::IconStyle icon_style = (is_close_btn && (btn.pressed || btn.hover)) ? IconMgr::IconStyle::IS_OutlinedLight : IconMgr::IconStyle::IS_Auto;
+        if (media_play_button)
+            icon_style = IconMgr::IconStyle::IS_Filled;
         IconMgr::IconSize icon_size = big_icon ? IconMgr::IconSize::IS_DPI_20 : IconMgr::IconSize::IS_DPI_16;
+        // Center the filled triangle's visual weight, rather than its transparent canvas.
+        if (media_play_button && icon_type == IconMgr::IT_Play)
+            rect_icon.OffsetRect(DPI(2), 0);
         DrawUiIcon(rect_icon, icon_type, icon_style, icon_size);
     }
 
@@ -1507,7 +1559,7 @@ bool CPlayerUIBase::PointInMenubarArea(CPoint point) const
 
 bool CPlayerUIBase::IsDrawBackgroundAlpha() const
 {
-    return theApp.m_app_setting_data.enable_background && m_ui_data.enable_background && (CPlayer::GetInstance().AlbumCoverExist() || !m_ui_data.default_background.IsNull());
+    return !IsMediaPlayerStyle() && theApp.m_app_setting_data.enable_background && m_ui_data.enable_background && (CPlayer::GetInstance().AlbumCoverExist() || !m_ui_data.default_background.IsNull());
 }
 
 bool CPlayerUIBase::IsDrawStatusBar() const
@@ -2062,14 +2114,14 @@ void CPlayerUIBase::DrawTitleBar(CRect rect)
 
     //绘制右侧图标
     rect_temp = rect;
-    rect_temp.left = rect_temp.right - theApp.DPI(30);
+    rect_temp.left = rect_temp.right - theApp.DPI(56);
     //关闭图标
-    DrawUIButton(rect_temp, BTN_APP_CLOSE);
+    DrawUIButton(rect_temp, BTN_APP_CLOSE, true);
     //最大化/还原图标
     if (theApp.m_app_setting_data.show_maximize_btn_in_titlebar)
     {
         rect_temp.MoveToX(rect_temp.left - rect_temp.Width());
-        DrawUIButton(rect_temp, BTN_MAXIMIZE);
+        DrawUIButton(rect_temp, BTN_MAXIMIZE, true);
     }
     else
     {
@@ -2079,13 +2131,14 @@ void CPlayerUIBase::DrawTitleBar(CRect rect)
     if (theApp.m_app_setting_data.show_minimize_btn_in_titlebar)
     {
         rect_temp.MoveToX(rect_temp.left - rect_temp.Width());
-        DrawUIButton(rect_temp, BTN_MINIMIZE);
+        DrawUIButton(rect_temp, BTN_MINIMIZE, true);
     }
     else
     {
         m_buttons[BTN_MINIMIZE].rect = CRect();
     }
     //全屏模式图标
+    rect_temp.right = rect_temp.left + theApp.DPI(30);
     if (theApp.m_app_setting_data.show_fullscreen_btn_in_titlebar)
     {
         rect_temp.MoveToX(rect_temp.left - rect_temp.Width());
@@ -2504,6 +2557,8 @@ void CPlayerUIBase::DrawUiMenuBar(CRect rect)
 void CPlayerUIBase::DrawMiniSpectrum(CRect rect)
 {
     COLORREF icon_color{ theApp.m_app_setting_data.dark_mode ? RGB(255, 255, 255) : RGB(110, 110, 110) };
+    if (IsMediaPlayerStyle())
+        icon_color = m_colors.color_spectrum;
     CSize size_icon = IconMgr::GetIconSize(IsDrawLargeIcon() ? IconMgr::IS_DPI_16_Full_Screen : IconMgr::IS_DPI_16);
     CPoint pos_icon{ rect.left + (rect.Width() - size_icon.cx) / 2 , rect.top + (rect.Height() - size_icon.cy) / 2 };
     const int spectrum_unit_width = DPI(4);     //柱形+间隙的宽度
@@ -2556,7 +2611,7 @@ void CPlayerUIBase::DrawUiIcon(const CRect& rect, IconMgr::IconType icon_type, I
 {
     // style为IS_Auto时根据深色模式设置向IconMgr要求深色/浅色图标，没有对应风格图标时IconMgr会自行fallback
     if (icon_style == IconMgr::IconStyle::IS_Auto)
-        icon_style = theApp.m_app_setting_data.dark_mode ? IconMgr::IconStyle::IS_OutlinedLight : IconMgr::IconStyle::IS_OutlinedDark;
+        icon_style = (IsMediaPlayerStyle() || theApp.m_app_setting_data.dark_mode) ? IconMgr::IconStyle::IS_OutlinedLight : IconMgr::IconStyle::IS_OutlinedDark;
     // 要求大图标时在icon_size基础上再进行放大（×全屏缩放系数）
     if (IsDrawLargeIcon() && icon_size == IconMgr::IconSize::IS_DPI_16)
         icon_size = IconMgr::IconSize::IS_DPI_16_Full_Screen;

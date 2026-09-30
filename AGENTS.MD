@@ -1,0 +1,3 @@
+After making changes, you can run the script build.bat to verify changes, check for errors, so after that, I just need to manually run the release build.
+If changes are easy to verify, you can launch the app and verify it yourself using powershell commands, but since you need to test on my device, ask me first or you can do it if I told you so.
+Leave comments, commit msg in english, no need to write in chinese

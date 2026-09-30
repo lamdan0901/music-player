@@ -4351,8 +4351,7 @@ afx_msg LRESULT CMusicPlayerDlg::OnAfterSetTrack(WPARAM wParam, LPARAM lParam)
     title_suffix += L'(' + theApp.m_str_table.LoadText(L"UI_TITLE_DEBUG_MODE") + L')';
 #endif
 
-    theApp.m_window_title = title + title_suffix;
-    SetWindowText(theApp.m_window_title.c_str());        //用当前正在播放的歌曲名作为窗口标题
+    SetWindowText(theApp.m_window_title.c_str());
 
     if (title_suffix.size() <= 127)
     {
@@ -4697,7 +4696,9 @@ UINT CMusicPlayerDlg::UiThreadFunc(LPVOID lpParam)
 
         //平滑滚动动画进行时按显示器刷新率绘制（等待窗口所在显示器的垂直同步），使每帧间隔一致，动画流畅；
         //DwmFlush实测不能稳定对齐刷新（60Hz下帧间隔约12毫秒），仅作为备用；Sleep的精度约为15.6毫秒，无法满足要求
-        if (!smooth_scrolling || !(WaitForWindowVBlank(pThis->GetSafeHwnd()) || SUCCEEDED(DwmFlush())))
+        if (!smooth_scrolling)
+            UiElement::AbstractScrollArea::WaitForScroll(pThis->m_ui_refresh_interval);
+        else if (!(WaitForWindowVBlank(pThis->GetSafeHwnd()) || SUCCEEDED(DwmFlush())))
             Sleep(pThis->m_ui_refresh_interval);
     }
     return 0;

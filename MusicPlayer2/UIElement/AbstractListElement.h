@@ -28,7 +28,7 @@ namespace UiElement
 
         void EnsureItemVisible(int index);  //确保指定项在播放列表中可见
         void EnsureHighlightItemVisible();  //确保高亮行可见
-        void CalculateItemRects();         //计算播放列表中每一项的矩形区域，保存在playlist_info.item_rects中
+        CRect GetItemRect(int displayed_index) const; // Calculate one row using the current scroll offset.
         int ItemHeight() const;
         void SetItemSelected(int index);    //设置单个项目选中
         int GetItemSelected() const;        //获取单个项目选中
@@ -76,7 +76,6 @@ namespace UiElement
         virtual bool IsItemMatchKeyWord(int row, const std::wstring& key_word);     //判断指定行是否匹配关键字（用于快速搜索功能，默认匹配每一列中的文本，只要有一列的文本匹配就返回true，派生类可重写此函数）
 
         int GetDisplayRowCount();       //获取要显示的行数。（处于搜索状态时返回搜索结果数量，正常状态下同GetRowCount）
-        bool IsRowDisplayed(int row);   //判断一行是否显示。（仅处于搜索状态时不匹配的行会返回false）
 
         void SetRelatedSearchBox(SearchBox* search_box) { related_search_box = search_box; }
 
@@ -102,7 +101,6 @@ namespace UiElement
 
         std::set<int> items_selected; //选中的序号
         CDrawCommon::ScrollInfo selected_item_scroll_info;  //绘制选中项滚动文本的结构体
-        std::vector<CRect> item_rects;  //播放列表中每个项目的矩形区域
         std::map<int, IPlayerUI::UIButton> hover_buttons;   //鼠标指向时的按钮
         int last_row_count{};
         int last_row_selected{ -1 };

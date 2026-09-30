@@ -42,33 +42,35 @@ void UiElement::AbstractListElement::DrawScrollArea()
         //设置字体
         UiFontGuard set_font(ui, font_size);
 
-        //displayed_row_index为显示的行号，for循环中的i为实际的行号
-        int displayed_row_index{};
-        for (int i{}; i < GetRowCount(); i++)
+        // Only visit rows intersecting the viewport, including partially visible rows.
+        const int row_count = GetDisplayRowCount();
+        const int row_height = ItemHeight();
+        const int first_row = std::clamp<int>((scroll_offset + clip_rect.top - rect.top) / row_height, 0, row_count);
+        const int last_row = std::clamp<int>((scroll_offset + clip_rect.bottom - rect.top + row_height - 1) / row_height, first_row, row_count);
+        const int hover_row = GetListIndexByPoint(m_mouse_pos);
+        for (int displayed_row_index = first_row; displayed_row_index < last_row; displayed_row_index++)
         {
-            if (i < 0 || i >= static_cast<int>(item_rects.size()))
-                break;
-            //跳过不显示的行
-            if (!IsRowDisplayed(i))
-                continue;
-            CRect rect_item{ item_rects[displayed_row_index] };
+            int i = displayed_row_index;
+            DisplayRowToAbsoluteRow(i);
+            CRect rect_item{ GetItemRect(displayed_row_index) };
             rect_item &= m_scroll_area_rect;
             //如果绘制的行在播放列表区域之外，则不绘制该行
             if (!(rect_item & rect).IsRectEmpty())
             {
                 COLORREF back_color{};
+                const bool highlight_row = IsHighlightRow(i);
                 //选中项目的背景
                 bool is_selected_item = false;
                 if (draw_hover_row_background)
                 {
                     if (m_client_area_rect.PtInRect(m_mouse_pos))
-                        is_selected_item = GetDisplayedIndexByPoint(m_mouse_pos) == i;
+                        is_selected_item = hover_row == i;
                 }
                 else
                 {
                     is_selected_item = IsItemSelected(i);
                 }
-                if (is_selected_item)
+                if (is_selected_item && !(ui->IsMediaPlayerStyle() && highlight_row))
                 {
                     back_color = ui->GetUIColors().color_list_selected;
                 }
@@ -76,20 +78,23 @@ void UiElement::AbstractListElement::DrawScrollArea()
                 else if (displayed_row_index % 2 == 0)
                 {
                     if (draw_alternate_background)
-                        back_color = ui->GetUIColors().color_control_bar_back;
+                        back_color = ui->IsMediaPlayerStyle() ? ui->GetUIColors().color_panel_back : ui->GetUIColors().color_control_bar_back;
                 }
                 //绘制背景
                 if (back_color != 0)
                 {
-                    if (theApp.m_app_setting_data.button_round_corners)
-                        ui->GetDrawer().DrawRoundRect(rect_item, back_color, ui->DPI(4), background_alpha);
+                    CRect rect_background{ ui->IsMediaPlayerStyle() ? GetItemRect(displayed_row_index) : rect_item };
+                    if (ui->IsMediaPlayerStyle())
+                        rect_background.DeflateRect(0, ui->DPI(3));
+                    if (theApp.m_app_setting_data.button_round_corners || ui->IsMediaPlayerStyle())
+                        ui->GetDrawer().DrawRoundRect(rect_background, back_color, ui->DPI(ui->IsMediaPlayerStyle() ? 8 : 4), background_alpha);
                     else
                         ui->GetDrawer().FillAlphaRect(rect_item, back_color, background_alpha, true);
                 }
 
                 bool draw_mini_spectrum = false;    //是否在正在播放行绘制迷你频谱
                 //绘制正在播放指示
-                if (IsHighlightRow(i))
+                if (highlight_row)
                 {
                     CRect rect_cur_indicator{ rect_item };
                     rect_cur_indicator.right = rect_cur_indicator.left + ui->DPI(4);
@@ -240,15 +245,16 @@ void UiElement::AbstractListElement::DrawScrollArea()
                     if (!draw_mini_spectrum || j > 0)//如果第1列绘制了迷你频谱，则不再绘制文本
                     {
                         DrawAreaGuard guard(&ui->GetDrawer(), clip_rect & rect_text);
+                        COLORREF text_color = ui->IsMediaPlayerStyle() && highlight_row
+                            ? ui->GetUIColors().color_text_heighlight : ui->GetUIColors().color_text;
                         if (!IsMultipleSelected() && i == GetItemSelected() && j == GetColumnScrollTextWhenSelected())
-                            ui->GetDrawer().DrawScrollText(rect_text, display_name.c_str(), ui->GetUIColors().color_text, ui->GetScrollTextPixel(), false, selected_item_scroll_info, false, true);
+                            ui->GetDrawer().DrawScrollText(rect_text, display_name.c_str(), text_color, ui->GetScrollTextPixel(), false, selected_item_scroll_info, false, true);
                         else
-                            ui->GetDrawer().DrawWindowText(rect_text, display_name.c_str(), ui->GetUIColors().color_text, Alignment::LEFT, true);
+                            ui->GetDrawer().DrawWindowText(rect_text, display_name.c_str(), text_color, Alignment::LEFT, true);
                     }
                     col_x = rect_cell.right;
                 }
             }
-            displayed_row_index++;
         }
     }
 }
@@ -262,7 +268,6 @@ void UiElement::AbstractListElement::Draw()
 {
     CalculateRect();
     RestrictOffset();
-    CalculateItemRects();
 
     if (last_row_count != GetRowCount())
     {
@@ -427,8 +432,8 @@ bool UiElement::AbstractListElement::MouseMove(CPoint point)
                 ui->UpdateMouseToolTip(GetToolTipIndex(), str_tip.c_str());
                 int display_row = row;
                 AbsoluteRowToDisplayRow(display_row);
-                if (display_row >= 0 && display_row < static_cast<int>(item_rects.size()))
-                    ui->UpdateMouseToolTipPosition(GetToolTipIndex(), item_rects[display_row]);
+                if (display_row >= 0 && display_row < GetDisplayRowCount())
+                    ui->UpdateMouseToolTipPosition(GetToolTipIndex(), GetItemRect(display_row));
             }
         }
     }
@@ -549,13 +554,12 @@ void UiElement::AbstractListElement::EnsureItemVisible(int index)
     }
 
     CalculateRect();
-    CalculateItemRects();
 
     AbsoluteRowToDisplayRow(index);
-    if (index < 0 || index >= static_cast<int>(item_rects.size()))
+    if (index < 0 || index >= GetDisplayRowCount())
         return;
 
-    CRect item_rect{ item_rects[index] };
+    CRect item_rect{ GetItemRect(index) };
     //确定当前项目是否处于可见状态
     if (item_rect.top > rect.top && item_rect.bottom < rect.bottom)
         return;
@@ -589,20 +593,13 @@ void UiElement::AbstractListElement::EnsureHighlightItemVisible()
         EnsureItemVisible(highlight_row);
 }
 
-void UiElement::AbstractListElement::CalculateItemRects()
+CRect UiElement::AbstractListElement::GetItemRect(int displayed_index) const
 {
-    item_rects.resize(GetRowCount());
-    for (size_t i{}; i < item_rects.size(); i++)
-    {
-        //计算每一行的矩形区域
-        int start_y = -scroll_offset + rect.top + i * ItemHeight();
-        CRect rect_item{ rect };
-        rect_item.top = start_y;
-        rect_item.bottom = rect_item.top + ItemHeight();
-
-        //保存每一行的矩形区域
-        item_rects[i] = rect_item;
-    }
+    const int row_height = ItemHeight();
+    CRect rect_item{ rect };
+    rect_item.top = rect.top - scroll_offset + displayed_index * row_height;
+    rect_item.bottom = rect_item.top + row_height;
+    return rect_item;
 }
 
 int UiElement::AbstractListElement::ItemHeight() const
@@ -648,8 +645,7 @@ void UiElement::AbstractListElement::GetItemsSelected(vector<int>& indexes) cons
 bool UiElement::AbstractListElement::IsItemSelected(int index) const
 {
     std::lock_guard<std::recursive_mutex> lock(m_selection_mutex);
-    auto iter = std::find(items_selected.begin(), items_selected.end(), index);
-    return iter != items_selected.end();
+    return items_selected.contains(index);
 }
 
 bool UiElement::AbstractListElement::IsMultipleSelected() const
@@ -751,24 +747,6 @@ int UiElement::AbstractListElement::GetDisplayRowCount()
         return GetRowCount();
 }
 
-bool UiElement::AbstractListElement::IsRowDisplayed(int row)
-{
-    if (row >= 0 && row < GetRowCount())
-    {
-        //搜索状态下，仅搜索结果中的行显示
-        if (searched)
-        {
-            return CCommon::IsItemInVector(search_result, row);
-        }
-        //非搜索状态下，所有行都显示
-        else
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
 void UiElement::AbstractListElement::SetSelectionChangedTrigger(std::function<void(AbstractListElement*)> func)
 {
     m_selection_changed_trigger = func;
@@ -813,12 +791,10 @@ int UiElement::AbstractListElement::GetListIndexByPoint(CPoint point)
 
 int UiElement::AbstractListElement::GetDisplayedIndexByPoint(CPoint point)
 {
-    for (size_t i{}; i < item_rects.size(); i++)
-    {
-        if (item_rects[i].PtInRect(point))
-            return static_cast<int>(i);
-    }
-    return -1;
+    if (!rect.PtInRect(point))
+        return -1;
+    const int index = (point.y - rect.top + scroll_offset) / ItemHeight();
+    return index >= 0 && index < GetDisplayRowCount() ? index : -1;
 }
 
 void UiElement::AbstractListElement::FromXmlNode(tinyxml2::XMLElement* xml_node)

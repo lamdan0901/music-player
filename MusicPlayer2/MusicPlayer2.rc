@@ -808,7 +808,7 @@ END
 IDD_MUSICPLAYER2_DIALOG DIALOGEX 0, 0, 382, 250
 STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_ACCEPTFILES | WS_EX_APPWINDOW
-CAPTION "MusicPlayer"
+CAPTION "Music Player"
 CLASS "MusicPlayer_l3gwYT"
 FONT 9, "微软雅黑", 400, 0, 0x0
 BEGIN
@@ -2960,7 +2960,7 @@ IDI_PLAY_TRACK          ICON                    "res\\单曲播放.ico"
 
 IDI_PLAY_TRACK_D        ICON                    "res\\单曲播放_d.ico"
 
-IDI_APP_DEBUG           ICON                    "res\\MusicPlayer2_debug.ico"
+IDI_APP_DEBUG           ICON                    "res\\MusicPlayer2.ico"
 
 IDI_TAG                 ICON                    "res\\tag.ico"
 

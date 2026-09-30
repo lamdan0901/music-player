@@ -2,6 +2,8 @@
 #include "UIElement/UIElement.h"
 #include <atomic>
 #include <chrono>
+#include <condition_variable>
+#include <mutex>
 namespace UiElement
 {
     //滚动区域
@@ -22,6 +24,7 @@ namespace UiElement
         void RestrictOffset();             //将滚动区域偏移量限制在正确的范围
         void ScrollBy(int distance);       //滚动指定的距离，界面启用了平滑滚动时以动画的方式滚动
         static bool IsSmoothScrolling();   //是否有滚动区域正在进行平滑滚动动画（用于界面线程临时提高刷新率）
+        static void WaitForScroll(int timeout_ms); // Wake the renderer as soon as scrolling starts.
 
     protected:
         CRect m_scroll_area_rect;       //滚动区域的矩形区域
@@ -50,6 +53,8 @@ namespace UiElement
         int smooth_written_offset{};        //上一帧动画写入scroll_offset的值，若scroll_offset被其他操作（拖动、定位等）改变则取消动画
         std::chrono::steady_clock::time_point smooth_last_time;
         static std::atomic<long long> smooth_scroll_until;   //平滑滚动动画预计结束的时间（steady_clock，毫秒）
+        static std::mutex smooth_scroll_mutex;
+        static std::condition_variable smooth_scroll_cv;
     };
 }
 

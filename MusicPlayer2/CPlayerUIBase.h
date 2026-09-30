@@ -17,7 +17,7 @@ struct SLayoutData
     const int path_edit_height = theApp.DPI(24);                //当前路径Edit控件的高度
     const int search_edit_height = theApp.DPI(26);              //歌曲搜索框Edit控件区域的高度
     const int toolbar_height = theApp.DPI(24);                  //播放列表工具栏的高度
-    const int titlabar_height = theApp.DPI(28);                 //标题栏的高度
+    const int titlabar_height = theApp.DPI(44);                 //标题栏的高度
     const int menubar_height = theApp.DPI(24);                  //菜单栏的高度
 };
 
@@ -98,6 +98,7 @@ public:
 
     CUIDrawer& GetDrawer() { return m_draw; }
     const UIColors& GetUIColors() const { return m_colors; }
+    bool IsMediaPlayerStyle() const { return m_media_player_style; }
     CWnd* GetOwner() const { return m_pMainWnd; }
 
     // 将字符串形如“%(KEY_STR)”格式的字符替换成当前<language>.ini中对应id的字符串
@@ -295,6 +296,7 @@ protected:
     CWnd* m_pMainWnd = nullptr;
     CDC* m_pDC = nullptr;
     UIColors m_colors;
+    bool m_media_player_style{};       // Windows Media Player appearance for skin #9 only.
     CUIDrawer m_draw{ m_colors };       //用于绘制文本的对象
     SLayoutData m_layout;
     //CFont m_font_time;
