@@ -1,6 +1,195 @@
 ﻿#include "stdafx.h"
 #include "DrawCommon.h"
 #include "GdiPlusTool.h"
+#include <dwrite_3.h>
+
+#pragma comment(lib, "dwrite.lib")
+
+namespace
+{
+    // Keep the existing GDI canvas; DirectWrite only renders small, plain UI text.
+    class BodyTextRenderer : public IDWriteTextRenderer
+    {
+    public:
+        bool Draw(HDC dc, const LOGFONT& font, CRect rect, LPCWSTR text, COLORREF color,
+            Alignment alignment, bool default_right_align, bool* out_of_bounds)
+        {
+            const float pixels_per_dip = GetDeviceCaps(dc, LOGPIXELSY) / 96.0f;
+            const float font_size = -font.lfHeight / pixels_per_dip;
+            if (font_size <= 0 || font_size > 12.5f || font.lfWeight != FW_NORMAL ||
+                font.lfItalic || font.lfUnderline || font.lfStrikeOut ||
+                wcscmp(font.lfFaceName, L"Segoe UI Variable Text") != 0 || GetMapMode(dc) != MM_TEXT)
+                return false;
+            if (rect.IsRectEmpty() || text[0] == L'\0')
+                return true;
+
+            if (!m_factory && FAILED(DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED,
+                __uuidof(IDWriteFactory6), reinterpret_cast<IUnknown**>(&m_factory))))
+                return false;
+            if (!m_rendering_params && FAILED(m_factory->CreateRenderingParams(&m_rendering_params)))
+                return false;
+            if (!m_format || m_font_size != font_size)
+            {
+                m_format.Release();
+                wchar_t locale[LOCALE_NAME_MAX_LENGTH]{ L"en-US" };
+                GetUserDefaultLocaleName(locale, LOCALE_NAME_MAX_LENGTH);
+                const DWRITE_FONT_AXIS_VALUE weight{ DWRITE_FONT_AXIS_TAG_WEIGHT, 400.0f };
+                if (FAILED(m_factory->CreateTextFormat(L"Segoe UI Variable", nullptr, &weight, 1,
+                    font_size, locale, &m_format)) ||
+                    FAILED(m_format->SetAutomaticFontAxes(DWRITE_AUTOMATIC_FONT_AXES_OPTICAL_SIZE)) ||
+                    FAILED(m_format->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP)) ||
+                    FAILED(m_format->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER)))
+                {
+                    m_format.Release();
+                    return false;
+                }
+                m_font_size = font_size;
+            }
+
+            const float width = rect.Width() / pixels_per_dip;
+            CComPtr<IDWriteTextLayout> layout;
+            if (FAILED(m_factory->CreateTextLayout(text, static_cast<UINT32>(wcslen(text)), m_format,
+                width, rect.Height() / pixels_per_dip, &layout)))
+                return false;
+            DWRITE_TEXT_METRICS metrics{};
+            if (FAILED(layout->GetMetrics(&metrics)))
+                return false;
+            const bool overflow = metrics.widthIncludingTrailingWhitespace > width;
+            if (out_of_bounds != nullptr)
+                *out_of_bounds = overflow;
+            if (overflow)
+                alignment = default_right_align ? Alignment::RIGHT : Alignment::LEFT;
+            const auto text_alignment = alignment == Alignment::RIGHT ? DWRITE_TEXT_ALIGNMENT_TRAILING :
+                alignment == Alignment::CENTER ? DWRITE_TEXT_ALIGNMENT_CENTER : DWRITE_TEXT_ALIGNMENT_LEADING;
+            if (FAILED(layout->SetTextAlignment(text_alignment)))
+                return false;
+            if (overflow)
+            {
+                CComPtr<IDWriteInlineObject> ellipsis;
+                const DWRITE_TRIMMING trimming{ DWRITE_TRIMMING_GRANULARITY_CHARACTER, 0, 0 };
+                if (FAILED(m_factory->CreateEllipsisTrimmingSign(m_format, &ellipsis)) ||
+                    FAILED(layout->SetTrimming(&trimming, ellipsis)))
+                    return false;
+            }
+
+            CRect clip;
+            const int clip_type = GetClipBox(dc, &clip);
+            if (clip_type == ERROR)
+                return false;
+            CRect paint_rect;
+            paint_rect.IntersectRect(rect, clip);
+            if (paint_rect.IsRectEmpty())
+                return true;
+            if (!m_target)
+            {
+                CComPtr<IDWriteGdiInterop> interop;
+                CComPtr<IDWriteBitmapRenderTarget> target;
+                if (FAILED(m_factory->GetGdiInterop(&interop)) ||
+                    FAILED(interop->CreateBitmapRenderTarget(dc, paint_rect.Width(), paint_rect.Height(), &target)) ||
+                    FAILED(target.QueryInterface(&m_target)) ||
+                    FAILED(m_target->SetTextAntialiasMode(DWRITE_TEXT_ANTIALIAS_MODE_GRAYSCALE)))
+                {
+                    m_target.Release();
+                    return false;
+                }
+            }
+            SIZE buffer_size{};
+            if (FAILED(m_target->GetSize(&buffer_size)))
+                return false;
+            if ((paint_rect.Width() > buffer_size.cx || paint_rect.Height() > buffer_size.cy) &&
+                FAILED(m_target->Resize(max(paint_rect.Width(), buffer_size.cx), max(paint_rect.Height(), buffer_size.cy))))
+                return false;
+            if (FAILED(m_target->SetPixelsPerDip(pixels_per_dip)))
+                return false;
+
+            HDC memory_dc = m_target->GetMemoryDC();
+            if (!BitBlt(memory_dc, 0, 0, paint_rect.Width(), paint_rect.Height(), dc,
+                paint_rect.left, paint_rect.top, SRCCOPY))
+                return false;
+            m_color = color;
+            if (FAILED(layout->Draw(nullptr, this, (rect.left - paint_rect.left) / pixels_per_dip,
+                (rect.top - paint_rect.top) / pixels_per_dip)))
+                return false;
+            return BitBlt(dc, paint_rect.left, paint_rect.top, paint_rect.Width(), paint_rect.Height(),
+                memory_dc, 0, 0, SRCCOPY) != FALSE;
+        }
+
+        IFACEMETHOD(QueryInterface)(REFIID iid, void** object) override
+        {
+            if (object == nullptr)
+                return E_POINTER;
+            *object = nullptr;
+            if (iid != __uuidof(IUnknown) && iid != __uuidof(IDWritePixelSnapping) && iid != __uuidof(IDWriteTextRenderer))
+                return E_NOINTERFACE;
+            *object = static_cast<IDWriteTextRenderer*>(this);
+            AddRef();
+            return S_OK;
+        }
+        IFACEMETHOD_(ULONG, AddRef)() override { return InterlockedIncrement(&m_references); }
+        IFACEMETHOD_(ULONG, Release)() override
+        {
+            const ULONG references = InterlockedDecrement(&m_references);
+            if (references == 0)
+                delete this;
+            return references;
+        }
+        IFACEMETHOD(IsPixelSnappingDisabled)(void*, BOOL* disabled) override
+        {
+            *disabled = FALSE;
+            return S_OK;
+        }
+        IFACEMETHOD(GetCurrentTransform)(void*, DWRITE_MATRIX* transform) override
+        {
+            return m_target->GetCurrentTransform(transform);
+        }
+        IFACEMETHOD(GetPixelsPerDip)(void*, FLOAT* pixels_per_dip) override
+        {
+            *pixels_per_dip = m_target->GetPixelsPerDip();
+            return S_OK;
+        }
+        IFACEMETHOD(DrawGlyphRun)(void*, FLOAT x, FLOAT y, DWRITE_MEASURING_MODE measuring_mode,
+            const DWRITE_GLYPH_RUN* run, const DWRITE_GLYPH_RUN_DESCRIPTION*, IUnknown*) override
+        {
+            return m_target->DrawGlyphRun(x, y, measuring_mode, run, m_rendering_params, m_color);
+        }
+        IFACEMETHOD(DrawInlineObject)(void* context, FLOAT x, FLOAT y, IDWriteInlineObject* object,
+            BOOL sideways, BOOL right_to_left, IUnknown* effect) override
+        {
+            return object->Draw(context, this, x, y, sideways, right_to_left, effect);
+        }
+        IFACEMETHOD(DrawUnderline)(void*, FLOAT, FLOAT, const DWRITE_UNDERLINE*, IUnknown*) override
+        {
+            return E_NOTIMPL;
+        }
+        IFACEMETHOD(DrawStrikethrough)(void*, FLOAT, FLOAT, const DWRITE_STRIKETHROUGH*, IUnknown*) override
+        {
+            return E_NOTIMPL;
+        }
+
+    private:
+        LONG m_references{ 1 };
+        CComPtr<IDWriteFactory6> m_factory;
+        CComPtr<IDWriteRenderingParams> m_rendering_params;
+        CComPtr<IDWriteTextFormat3> m_format;
+        CComPtr<IDWriteBitmapRenderTarget1> m_target;
+        float m_font_size{};
+        COLORREF m_color{};
+    };
+
+    bool DrawBodyText(HDC dc, CFont* font, CRect rect, LPCWSTR text, COLORREF color,
+        Alignment alignment, bool default_right_align, bool* out_of_bounds)
+    {
+        if (font == nullptr)
+            return false;
+        LOGFONT log_font{};
+        if (!font->GetLogFont(&log_font))
+            return false;
+        static thread_local CComPtr<BodyTextRenderer> renderer;
+        if (!renderer)
+            renderer.Attach(new BodyTextRenderer);
+        return renderer->Draw(dc, log_font, rect, text, color, alignment, default_right_align, out_of_bounds);
+    }
+}
 
 
 void CDrawCommon::ScrollInfo::Reset()
@@ -75,6 +264,9 @@ void CDrawCommon::DrawWindowText(CRect rect, LPCTSTR lpszString, COLORREF color,
         m_pDC->SelectObject(m_pfont);
     //设置绘图的剪辑区域
     DrawAreaGuard guard(this, rect, true, !no_clip_area);
+    if (!multi_line && DrawBodyText(m_pDC->GetSafeHdc(), m_pfont, rect, lpszString, color,
+        align, default_right_align, out_of_bounds))
+        return;
     CSize text_size = m_pDC->GetTextExtent(lpszString);
     //用背景色填充矩形区域
     //m_pDC->FillSolidRect(rect, m_backColor);

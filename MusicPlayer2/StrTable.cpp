@@ -96,9 +96,8 @@ bool StrTable::Init(const wstring& language_dir, wstring& language_tag_setting)
         }
     }
 
-    // TODO: 检查系统是否已安装此字体（未测试：我担心其中使用的字体枚举API当系统字体非常多时出现严重的效率问题）
-    if (m_default_font_name.empty() || m_default_font_name.size() > LF_FACESIZE - 1/* || !CCommon::IsFontInstalled(m_default_font_name)*/)
-        m_default_font_name = CCommon::GetSystemDefaultUIFont();
+    // Use the GDI family name of Segoe UI Variable for every UI language.
+    m_default_font_name = L"Segoe UI Variable Text";
     // 将map去重又排序的结果装入m_language_list
     std::transform(list.begin(), list.end(), std::back_inserter(m_language_list),
         [](const auto& pair) { return std::move(pair.second); });
