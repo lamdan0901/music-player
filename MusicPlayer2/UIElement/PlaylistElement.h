@@ -80,6 +80,7 @@ namespace UiElement
         int last_highlight_row{ -1 };
         bool drag_reorder{};        //是否允许拖动曲目排序
         bool single_click_play{};   //是否单击播放曲目（否则双击播放）
+        bool show_tooltip{ true };  //鼠标指向曲目时是否显示鼠标提示
         int click_play_row{ -1 };   //单击播放时鼠标按下的行，-1表示不播放
         bool drag_pressed{};        //是否在选中行上按下了鼠标左键
         bool dragging{};            //是否正在拖动

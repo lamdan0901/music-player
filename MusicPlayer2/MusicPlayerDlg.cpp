@@ -36,6 +36,8 @@
 #include "UIPanel/SettingsPanel.h"
 #include "UIDialog/UITestDialog.h"
 #include "OpenUrlDlg.h"
+#include <dxgi.h>
+#pragma comment(lib, "dxgi.lib")
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -4549,6 +4551,43 @@ UINT CMusicPlayerDlg::DownloadLyricAndCoverThreadFunc(LPVOID lpParam)
     return 0;
 }
 
+//等待窗口所在显示器的下一次垂直同步（仅在界面线程中调用），成功返回true
+static bool WaitForWindowVBlank(HWND hwnd)
+{
+    static CComPtr<IDXGIFactory1> factory;
+    static CComPtr<IDXGIOutput> output;
+    static HMONITOR output_monitor{};
+    //显示器配置改变后需要重新枚举
+    if (factory && !factory->IsCurrent())
+    {
+        factory.Release();
+        output_monitor = NULL;
+    }
+    HMONITOR monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+    if (monitor != output_monitor)
+    {
+        output.Release();
+        output_monitor = monitor;
+        if (!factory && FAILED(CreateDXGIFactory1(IID_PPV_ARGS(&factory))))
+            return false;
+        CComPtr<IDXGIAdapter1> adapter;
+        for (UINT i = 0; !output && factory->EnumAdapters1(i, &adapter) != DXGI_ERROR_NOT_FOUND; i++, adapter.Release())
+        {
+            CComPtr<IDXGIOutput> cur;
+            for (UINT j = 0; adapter->EnumOutputs(j, &cur) != DXGI_ERROR_NOT_FOUND; j++, cur.Release())
+            {
+                DXGI_OUTPUT_DESC desc;
+                if (SUCCEEDED(cur->GetDesc(&desc)) && desc.Monitor == monitor)
+                {
+                    output = cur;
+                    break;
+                }
+            }
+        }
+    }
+    return output && SUCCEEDED(output->WaitForVBlank());
+}
+
 UINT CMusicPlayerDlg::UiThreadFunc(LPVOID lpParam)
 {
     CCommon::SetThreadLanguageList(theApp.m_str_table.GetLanguageTag());
@@ -4585,12 +4624,46 @@ UINT CMusicPlayerDlg::UiThreadFunc(LPVOID lpParam)
         {
             fresh_cnt = 2;
         }
+        //TODO(scroll timing): 临时统计平滑滚动时每帧的绘制耗时和帧间隔，滚动结束后写入scroll_timing.log，测完删除
+        static int st_frames{}, st_slow{};
+        static double st_draw_sum{}, st_draw_max{}, st_gap_sum{}, st_gap_max{};
+        static std::chrono::steady_clock::time_point st_last_frame;
+        auto st_draw_start = std::chrono::steady_clock::now();
+
         if (fresh_cnt)
         {
             fresh_cnt--;
             pThis->m_pUI->DrawInfo(pPara->draw_reset);
             pPara->draw_reset = false;
             pPara->ui_force_refresh = false;
+        }
+
+        if (smooth_scrolling)
+        {
+            auto st_now = std::chrono::steady_clock::now();
+            double draw_ms = std::chrono::duration<double, std::milli>(st_now - st_draw_start).count();
+            st_draw_sum += draw_ms;
+            st_draw_max = max(st_draw_max, draw_ms);
+            if (st_frames > 0)
+            {
+                double gap_ms = std::chrono::duration<double, std::milli>(st_draw_start - st_last_frame).count();
+                st_gap_sum += gap_ms;
+                st_gap_max = max(st_gap_max, gap_ms);
+                if (gap_ms > 20)    //超过20毫秒视为错过了一次60Hz刷新
+                    st_slow++;
+            }
+            st_last_frame = st_draw_start;
+            st_frames++;
+        }
+        else if (st_frames > 0)
+        {
+            wchar_t buff[256];
+            swprintf_s(buff, L"scroll: frames=%d, draw avg=%.2fms max=%.2fms, frame gap avg=%.2fms max=%.2fms, gaps>20ms=%d",
+                st_frames, st_draw_sum / st_frames, st_draw_max, st_frames > 1 ? st_gap_sum / (st_frames - 1) : 0.0, st_gap_max, st_slow);
+            OutputDebugStringW(buff);
+            CCommon::WriteLog((theApp.m_config_dir + L"scroll_timing.log").c_str(), buff);
+            st_frames = st_slow = 0;
+            st_draw_sum = st_draw_max = st_gap_sum = st_gap_max = 0;
         }
 
         //绘制迷你模式界面
@@ -4622,8 +4695,9 @@ UINT CMusicPlayerDlg::UiThreadFunc(LPVOID lpParam)
         CPlayer::GetInstance().m_controls.UpdatePosition(CPlayer::GetInstance().GetCurrentPosition());
         pThis->m_fps_cnt++;
 
-        //平滑滚动动画进行时按显示器刷新率绘制（DwmFlush等待下一次桌面合成），使动画流畅；Sleep的精度约为15.6毫秒，无法满足要求
-        if (!smooth_scrolling || FAILED(DwmFlush()))
+        //平滑滚动动画进行时按显示器刷新率绘制（等待窗口所在显示器的垂直同步），使每帧间隔一致，动画流畅；
+        //DwmFlush实测不能稳定对齐刷新（60Hz下帧间隔约12毫秒），仅作为备用；Sleep的精度约为15.6毫秒，无法满足要求
+        if (!smooth_scrolling || !(WaitForWindowVBlank(pThis->GetSafeHwnd()) || SUCCEEDED(DwmFlush())))
             Sleep(pThis->m_ui_refresh_interval);
     }
     return 0;

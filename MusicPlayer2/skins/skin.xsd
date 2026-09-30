@@ -1663,6 +1663,11 @@
         <xs:documentation>是否单击播放曲目（为false时双击播放）。按住Ctrl/Shift多选、拖动或点击行内按钮时不播放。</xs:documentation>
       </xs:annotation>
     </xs:attribute>
+    <xs:attribute name="show_tooltip" type="xs:boolean" default="true">
+      <xs:annotation>
+        <xs:documentation>鼠标指向曲目时是否显示鼠标提示（行内按钮的鼠标提示不受影响）。</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
   </xs:complexType>
   <xs:complexType name="playlistIndicatorType">
     <xs:annotation>

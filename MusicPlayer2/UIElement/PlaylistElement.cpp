@@ -90,7 +90,7 @@ int UiElement::Playlist::GetColumnScrollTextWhenSelected()
 
 bool UiElement::Playlist::ShowTooltip()
 {
-    return theApp.m_media_lib_setting_data.show_playlist_tooltip;
+    return show_tooltip && theApp.m_media_lib_setting_data.show_playlist_tooltip;
 }
 
 std::wstring UiElement::Playlist::GetToolTipText(int row)
@@ -383,6 +383,7 @@ void UiElement::Playlist::FromXmlNode(tinyxml2::XMLElement* xml_node)
     AbstractListElement::FromXmlNode(xml_node);
     CTinyXml2Helper::GetElementAttributeBool(xml_node, "drag_reorder", drag_reorder);
     CTinyXml2Helper::GetElementAttributeBool(xml_node, "single_click_play", single_click_play);
+    CTinyXml2Helper::GetElementAttributeBool(xml_node, "show_tooltip", show_tooltip);
 }
 
 int UiElement::Playlist::GetDropIndex(CPoint point)

@@ -6,6 +6,8 @@
 #define SMOOTH_SCROLL_TIME_CONSTANT 60.0
 //平滑滚动时每次滚动的距离相对于普通滚动的比例
 #define SMOOTH_SCROLL_DISTANCE_RATIO 0.7
+//平滑滚动的最小速度（像素/毫秒，按96DPI计），约为60Hz下每帧2像素
+#define SMOOTH_SCROLL_MIN_SPEED 0.12
 
 std::atomic<long long> UiElement::AbstractScrollArea::smooth_scroll_until{};
 
@@ -255,13 +257,23 @@ void UiElement::AbstractScrollArea::UpdateSmoothScroll()
         return;
     }
     auto now = std::chrono::steady_clock::now();
+    //限制单帧时间，避免界面线程从低刷新率切换到动画刷新率时第一帧跳动过大
     double elapsed = std::chrono::duration<double, std::milli>(now - smooth_last_time).count();
+    elapsed = min(elapsed, 1000.0 / 30);
     smooth_last_time = now;
-    smooth_offset += (smooth_target - smooth_offset) * (1.0 - std::exp(-elapsed / SMOOTH_SCROLL_TIME_CONSTANT));
-    if (std::abs(smooth_target - smooth_offset) < 0.5)
+    double remain = smooth_target - smooth_offset;
+    //指数曲线的步长，在接近目标时不低于最小速度，避免动画末尾像素级缓慢爬行导致的卡顿感（两者在剩余距离为 最小速度×时间常数 处速度连续）
+    double step = std::abs(remain) * (1.0 - std::exp(-elapsed / SMOOTH_SCROLL_TIME_CONSTANT));
+    step = max(step, ui->DPI(100) / 100.0 * SMOOTH_SCROLL_MIN_SPEED * elapsed);
+    if (step >= std::abs(remain))
     {
         smooth_offset = smooth_target;
         smooth_scrolling = false;
+    }
+    else
+    {
+        smooth_offset += remain > 0 ? step : -step;
+        smooth_scroll_until = max(smooth_scroll_until.load(), SteadyClockMs() + 100);  //动画未结束时保持按显示器刷新率绘制
     }
     scroll_offset = smooth_written_offset = static_cast<int>(std::lround(smooth_offset));
 }
