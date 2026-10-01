@@ -509,7 +509,7 @@ public:
     void ReIniPlayerCore(bool replay = false);
 
     //播放列表按照m_sort_mode排序（当is_init为false时，排序后重新查找正在播放的歌曲）
-    void SortPlaylist(bool is_init = false);
+    void SortPlaylist(bool is_init = false, SortMode sort_override = SM_UNSORT);
     //文件夹/媒体库模式下是否保存了拖动调整的自定义顺序
     bool HasCustomOrder() const;
     //获取专辑封面

@@ -366,6 +366,9 @@ protected:
     afx_msg void OnSortByTrack();
     afx_msg void OnSortByListenTime();
     afx_msg void OnSortByModifiedTime();
+    afx_msg void OnSortByAddedTime();
+    afx_msg void OnSortRecentlyAdded();
+    afx_msg void OnReverseDateSort();
     afx_msg void OnResetCustomOrder();
 public:
     afx_msg void OnDeleteFromDisk();

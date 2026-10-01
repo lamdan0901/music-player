@@ -29,6 +29,17 @@ void UiElement::Text::Draw()
         text_color = colors.color_text_2;
 
     out_of_bounds = false;
+    bool scroll_enabled = true;
+    if (scroll_on_hover)
+    {
+        CPoint point;
+        GetCursorPos(&point);
+        const bool over_window = GetAncestor(WindowFromPoint(point), GA_ROOT) == GetAncestor(ui->GetOwner()->GetSafeHwnd(), GA_ROOT);
+        ui->GetOwner()->ScreenToClient(&point);
+        scroll_enabled = over_window && (Parent() != nullptr ? Parent()->GetRect() : rect).PtInRect(point);
+        if (!scroll_enabled)
+            scroll_info.Reset();
+    }
     int text_extent{ ui->GetDrawer().GetTextExtent(draw_text.c_str()).cx };  //文本的实际宽度
     if (rect.Width() >= text_extent)    //如果绘图区域的宽度大于文本的实际宽度，则文本不需要滚动显示
     {
@@ -36,7 +47,7 @@ void UiElement::Text::Draw()
     }
     else
     {
-        switch (style)
+        switch (scroll_enabled ? style : UiElement::Text::Static)
         {
         case UiElement::Text::Static:
             ui->GetDrawer().DrawWindowText(rect, draw_text.c_str(), text_color, align, true, false, false, &out_of_bounds);
@@ -173,6 +184,7 @@ void UiElement::Text::FromXmlNode(tinyxml2::XMLElement* xml_node)
     else if (str_alignment == "center")
         align = Alignment::CENTER;
     //style
+    CTinyXml2Helper::GetElementAttributeBool(xml_node, "scroll_on_hover", scroll_on_hover);
     std::string str_style = CTinyXml2Helper::ElementAttribute(xml_node, "style");
     if (str_style == "static")
         style = UiElement::Text::Static;

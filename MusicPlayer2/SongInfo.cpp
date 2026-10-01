@@ -349,12 +349,29 @@ static bool ByListenTimeDecending(const SongInfo& a, const SongInfo& b)
 
 static bool ByModifiedTime(const SongInfo& a, const SongInfo& b)
 {
-    return a.modified_time < b.modified_time;
+    return a.date_modified_ms < b.date_modified_ms;
 }
 
 static bool ByModifiedTimeDecending(const SongInfo& a, const SongInfo& b)
 {
-    return a.modified_time > b.modified_time;
+    return a.date_modified_ms > b.date_modified_ms;
+}
+
+static bool ByAddedTime(const SongInfo& a, const SongInfo& b)
+{
+    return a.date_added_ms < b.date_added_ms;
+}
+
+static bool ByAddedTimeDescending(const SongInfo& a, const SongInfo& b)
+{
+    return a.date_added_ms > b.date_added_ms;
+}
+
+static bool ByRecentlyAdded(const SongInfo& a, const SongInfo& b)
+{
+    if (a.date_modified_ms != b.date_modified_ms)
+        return a.date_modified_ms > b.date_modified_ms;
+    return a.date_added_ms > b.date_added_ms;
 }
 
 static bool ByGenre(const SongInfo& a, const SongInfo& b)
@@ -407,6 +424,9 @@ std::function<bool(const SongInfo& a, const SongInfo& b)> SongInfo::GetSortFunc(
     case SM_D_LISTEN: return ByListenTimeDecending;
     case SM_U_TIME: return ByModifiedTime;
     case SM_D_TIME: return ByModifiedTimeDecending;
+    case SM_U_ADDED: return ByAddedTime;
+    case SM_D_ADDED: return ByAddedTimeDescending;
+    case SM_RECENT_ADDED: return ByRecentlyAdded;
     case SM_U_GENRE: return ByGenre;
     case SM_D_GENRE: return ByGenreDecending;
     case SM_U_YEAR: return ByYear;
@@ -415,6 +435,18 @@ std::function<bool(const SongInfo& a, const SongInfo& b)> SongInfo::GetSortFunc(
     case SM_D_BITRATE: return ByBitrateDecending;
     default: return [](const SongInfo& a, const SongInfo& b) { return true; };
     }
+}
+
+void SongInfo::SortSongs(vector<SongInfo>& songs, SortMode sort_mode)
+{
+    if (sort_mode == SM_U_TIME || sort_mode == SM_D_TIME ||
+        sort_mode == SM_U_ADDED || sort_mode == SM_D_ADDED || sort_mode == SM_RECENT_ADDED)
+    {
+        // Read file stats once per item, outside the comparison loop.
+        for (auto& song : songs)
+            CCommon::GetFileTrackDates(song.file_path, song.date_added_ms, song.date_modified_ms);
+    }
+    std::stable_sort(songs.begin(), songs.end(), GetSortFunc(sort_mode));
 }
 
 wstring SongInfo::GetSortModeDisplayName(SortMode sort_mode)
@@ -438,6 +470,9 @@ wstring SongInfo::GetSortModeDisplayName(SortMode sort_mode)
     case SM_D_LISTEN: str_sort_mode = theApp.m_str_table.LoadText(L"TXT_SM_D_LISTEN"); break;
     case SM_U_TIME: str_sort_mode = theApp.m_str_table.LoadText(L"TXT_SM_U_TIME"); break;
     case SM_D_TIME: str_sort_mode = theApp.m_str_table.LoadText(L"TXT_SM_D_TIME"); break;
+    case SM_U_ADDED: str_sort_mode = theApp.m_str_table.LoadText(L"TXT_SM_U_ADDED"); break;
+    case SM_D_ADDED: str_sort_mode = theApp.m_str_table.LoadText(L"TXT_SM_D_ADDED"); break;
+    case SM_RECENT_ADDED: str_sort_mode = theApp.m_str_table.LoadText(L"TXT_SM_RECENT_ADDED"); break;
     case SM_UNSORT: str_sort_mode = theApp.m_str_table.LoadText(L"TXT_SM_UNSORT"); break;
     }
     return str_sort_mode;

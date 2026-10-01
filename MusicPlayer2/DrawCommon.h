@@ -39,6 +39,17 @@ public:
         int freez{};            //当该变量大于0时，文本不滚动，直到小于等于0为止
         bool dir_changed{ false };  //如果方向发生了变化，则为true
         CString last_string;        //上一次绘制的文本
+        ULONGLONG last_scroll_time{ GetTickCount64() };
+
+        bool ShouldAdvance(int interval, ULONGLONG now = GetTickCount64())
+        {
+            const ULONGLONG elapsed = now - last_scroll_time;
+            if (elapsed < static_cast<ULONGLONG>(interval))
+                return false;
+            // Preserve the text cadence when smooth scrolling adds extra redraws.
+            last_scroll_time = now - elapsed % interval;
+            return true;
+        }
 
         void Reset();
     };

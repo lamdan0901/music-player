@@ -37,6 +37,10 @@ enum SortMode
     SM_U_BITRATE,           // 比特率 升序
     SM_D_BITRATE,           // 比特率 降序
 
+    SM_U_ADDED,             // Date added, oldest first
+    SM_D_ADDED,             // Date added, newest first
+    SM_RECENT_ADDED,         // Modified descending, then added descending
+
     SM_UNSORT = 100,        // 未排序（进入播放列表模式时总是设置为此排序方式，且不进行持久化）
 };
 
@@ -58,6 +62,8 @@ struct SongInfo
     char song_id_qq_music[16]{};        // 歌曲对应的QQ音乐中的歌曲ID<仅在媒体库内使用>
     __int64 last_played_time{};         // 上次播放的时间<仅在媒体库内使用>
     unsigned __int64 modified_time{};   // 修改时间
+    __int64 date_added_ms{};             // File-derived sort keys, refreshed before date sorting
+    __int64 date_modified_ms{};
     int track{};                        // 音轨序号
     int listen_time{};                  // 歌曲累计听的时间（单位为秒）<仅在媒体库内使用>
     int freq{};                         // 采样频率
@@ -132,6 +138,7 @@ struct SongInfo
 
     // 获取SongInfo的排序谓词方法
     static std::function<bool(const SongInfo& a, const SongInfo& b)> GetSortFunc(SortMode sort_mode);
+    static void SortSongs(vector<SongInfo>& songs, SortMode sort_mode);
     // 获取排序方式的显示名称
     static wstring GetSortModeDisplayName(SortMode sort_mode);
 

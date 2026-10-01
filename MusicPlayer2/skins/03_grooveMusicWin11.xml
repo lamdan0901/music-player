@@ -256,8 +256,8 @@
                 <albumCover/>
               </element>
               <verticalLayout margin="4">
-                <text type="title" style="scroll" height="24" font_size="10"/>
-                <text type="artist" color_style="emphasis2" style="scroll" height="24"/>
+                <text type="title" style="scroll" scroll_on_hover="true" height="24" font_size="10"/>
+                <text type="artist" color_style="emphasis2" style="scroll" scroll_on_hover="true" height="24"/>
               </verticalLayout>
             </horizontalLayout>
             <horizontalLayout height="60" width="36%">
@@ -426,8 +426,8 @@
               <albumCover/>
             </element>
             <verticalLayout margin="4">
-              <text type="title" style="scroll" height="24" font_size="10"/>
-              <text type="artist" color_style="emphasis2" style="scroll" height="24"/>
+              <text type="title" style="scroll" scroll_on_hover="true" height="24" font_size="10"/>
+              <text type="artist" color_style="emphasis2" style="scroll" scroll_on_hover="true" height="24"/>
             </verticalLayout>
             <button key="previous" width="40" height="40" bigIcon="true" margin="2"/>
             <button key="playPause" width="44" height="44" bigIcon="true" margin="2"/>

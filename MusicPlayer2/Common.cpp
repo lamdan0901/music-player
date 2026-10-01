@@ -89,6 +89,39 @@ bool CCommon::GetFileLastModified(const wstring& file_path, unsigned __int64& mo
     return false;
 }
 
+bool CCommon::GetFileTrackDates(const wstring& file_path, __int64& added_ms, __int64& modified_ms)
+{
+    added_ms = modified_ms = 0;
+    WIN32_FILE_ATTRIBUTE_DATA attributes{};
+    if (!GetFileAttributesExW(file_path.c_str(), GetFileExInfoStandard, &attributes))
+        return false;
+
+    auto toMilliseconds = [](const FILETIME& time) -> __int64 {
+        ULARGE_INTEGER value{};
+        value.HighPart = time.dwHighDateTime;
+        value.LowPart = time.dwLowDateTime;
+        if (value.QuadPart == 0)
+            return 0;
+        return (static_cast<__int64>(value.QuadPart) - 116444736000000000LL) / 10000;
+    };
+    // Namida's native Windows path uses a local 1980 cutoff plus one millisecond.
+    static const __int64 cutoff = [&]() {
+        SYSTEMTIME local{};
+        local.wYear = 1980;
+        local.wMonth = local.wDay = 1;
+        SYSTEMTIME utc{};
+        FILETIME time{};
+        TzSpecificLocalTimeToSystemTime(nullptr, &local, &utc);
+        SystemTimeToFileTime(&utc, &time);
+        return toMilliseconds(time) + 1;
+    }();
+    modified_ms = toMilliseconds(attributes.ftLastWriteTime);
+    for (__int64 candidate : { modified_ms, toMilliseconds(attributes.ftCreationTime), toMilliseconds(attributes.ftLastAccessTime) })
+        if (candidate > cutoff && (added_ms == 0 || candidate < added_ms))
+            added_ms = candidate;
+    return true;
+}
+
 bool CCommon::GetFileCreateTime(const wstring& file_path, unsigned __int64& create_time)
 {
     // 使用GetFileAttributesEx，耗时大约为FindFirstFile的2/3

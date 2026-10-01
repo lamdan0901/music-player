@@ -2270,14 +2270,15 @@ void CPlayer::ReIniPlayerCore(bool replay)
     GetPlayStatusMutex().unlock();
 }
 
-void CPlayer::SortPlaylist(bool is_init)
+void CPlayer::SortPlaylist(bool is_init, SortMode sort_override)
 {
     if (m_loading && !is_init) return;
     CWaitCursor wait_cursor;
     SongInfo current_song = GetCurrentSongInfo();
-    ASSERT(m_sort_mode != SM_UNSORT);
-    auto sort_fun = SongInfo::GetSortFunc(m_sort_mode == SM_UNSORT ? SM_U_FILE : m_sort_mode);
-    std::stable_sort(m_playlist.begin(), m_playlist.end(), sort_fun);
+    ASSERT(m_sort_mode != SM_UNSORT || sort_override != SM_UNSORT);
+    const SortMode effective_sort = sort_override != SM_UNSORT ? sort_override :
+        (m_sort_mode == SM_UNSORT ? SM_U_FILE : m_sort_mode);
+    SongInfo::SortSongs(m_playlist, effective_sort);
 
     if (!is_init)   // 由初始化完成方法调用时不重新查找index
     {

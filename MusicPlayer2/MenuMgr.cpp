@@ -455,6 +455,9 @@ void MenuMgr::CreateMenu(MenuBase& menu)
         menu.AppendItem(EX_ID(ID_SORT_BY_TRACK));
         menu.AppendItem(EX_ID(ID_SORT_BY_LISTEN_TIME));
         menu.AppendItem(EX_ID(ID_SORT_BY_MODIFIED_TIME));
+        menu.AppendItem(EX_ID(ID_SORT_BY_ADDED_TIME));
+        menu.AppendItem(EX_ID(ID_SORT_RECENTLY_ADDED));
+        menu.AppendItem(EX_ID(ID_REVERSE_DATE_SORT));
         menu.AppendSeparator();
         menu.AppendItem(EX_ID(ID_RESET_CUSTOM_ORDER));
         break;

@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "DrawCommon.h"
 #include "GdiPlusTool.h"
+#include "MusicPlayer2.h"
 #include <dwrite_3.h>
 
 #pragma comment(lib, "dwrite.lib")
@@ -198,6 +199,7 @@ void CDrawCommon::ScrollInfo::Reset()
     shift_dir = false;
     freez = 20;
     dir_changed = false;
+    last_scroll_time = GetTickCount64();
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -422,16 +424,19 @@ void CDrawCommon::DrawScrollText(CRect rect, LPCTSTR lpszString, COLORREF color,
     //m_pDC->FillSolidRect(rect, m_backColor);
     //输出文本
     m_pDC->DrawText(lpszString, text_rect, DT_SINGLELINE | DT_NOPREFIX);
-    if (scroll_info.freez <= 0)     //当freez为0的时候才滚动
+    if (scroll_info.ShouldAdvance(theApp.m_app_setting_data.ui_refresh_interval))
     {
-        if (scroll_info.shift_dir)
-            scroll_info.shift_cnt--;
+        if (scroll_info.freez <= 0)     //当freez为0的时候才滚动
+        {
+            if (scroll_info.shift_dir)
+                scroll_info.shift_cnt--;
+            else
+                scroll_info.shift_cnt++;
+        }
         else
-            scroll_info.shift_cnt++;
-    }
-    else
-    {
-        scroll_info.freez--;
+        {
+            scroll_info.freez--;
+        }
     }
     if ((rect & text_rect).IsRectEmpty())       //如果文本矩形区域已经超出了绘图区域，则重置滚动
     {
@@ -453,8 +458,7 @@ void CDrawCommon::DrawScrollText2(CRect rect, LPCTSTR lpszString, COLORREF color
 
     if (reset)
     {
-        scroll_info.shift_cnt = 0;
-        scroll_info.freez = 20;
+        scroll_info.Reset();
     }
     m_pDC->SetTextColor(color);
     m_pDC->SetBkMode(TRANSPARENT);
@@ -490,15 +494,18 @@ void CDrawCommon::DrawScrollText2(CRect rect, LPCTSTR lpszString, COLORREF color
     //m_pDC->FillSolidRect(rect, m_backColor);
     //输出文本
     m_pDC->DrawText(lpszString, text_rect, DT_SINGLELINE | DT_NOPREFIX);
-    if (scroll_info.freez <= 0)     //当freez为0的时候才滚动
+    if (scroll_info.ShouldAdvance(theApp.m_app_setting_data.ui_refresh_interval))
     {
-        scroll_info.shift_cnt++;
-    }
-    else
-    {
-        scroll_info.freez--;
-        if (scroll_info.freez == 10)        //当freez递减到一半时将文本复位
-            scroll_info.shift_cnt = 0;
+        if (scroll_info.freez <= 0)     //当freez为0的时候才滚动
+        {
+            scroll_info.shift_cnt++;
+        }
+        else
+        {
+            scroll_info.freez--;
+            if (scroll_info.freez == 10)        //当freez递减到一半时将文本复位
+                scroll_info.shift_cnt = 0;
+        }
     }
     if ((rect & text_rect).IsRectEmpty())       //如果文本矩形区域已经超出了绘图区域，则重置滚动
     {

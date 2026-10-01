@@ -24,6 +24,8 @@ void UiElement::TrackList::SetListItem(const ListItem& list_item)
             CMediaClassifier classifer(list_item.medialib_type);
             classifer.ClassifyMedia();
             song_list = classifer.GetMeidaList()[list_item.path];
+            if (list_item.sort_mode != SM_UNSORT)
+                SongInfo::SortSongs(song_list, list_item.sort_mode);
         }
 
     }
@@ -34,14 +36,12 @@ void UiElement::TrackList::SetListItem(const ListItem& list_item)
         int cnt{};
         bool flag{};
         CAudioCommon::GetCueTracks(song_list, cnt, flag, MR_MIN_REQUIRED);
-        //排序
-        auto sort_fun = SongInfo::GetSortFunc(list_item.sort_mode == SM_UNSORT ? SM_U_FILE : list_item.sort_mode);
-        std::stable_sort(song_list.begin(), song_list.end(), sort_fun);
         //获取曲目信息
         for (auto& cur_song : song_list)
         {
             cur_song = CSongDataManager::GetInstance().GetSongInfo3(cur_song);
         }
+        SongInfo::SortSongs(song_list, list_item.sort_mode == SM_UNSORT ? SM_U_FILE : list_item.sort_mode);
     }
     else if (list_item.type == LT_PLAYLIST)
     {

@@ -41,6 +41,7 @@ namespace UiElement
         Type type;
         int font_size{ 9 };
         bool width_follow_text{};
+        bool scroll_on_hover{};
         CPlayerUIBase::ColorMode color_mode{ CPlayerUIBase::RCM_AUTO };
         bool show_volume{};     //当type为PlayTimeAndVolume时有效，如果为true，则显示为音量
         ColorStyle color_style{};

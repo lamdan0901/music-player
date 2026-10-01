@@ -91,6 +91,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="unittest1.cpp" />
+    <ClCompile Include="DateSorting.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MusicPlayer2\MusicPlayer2.vcxproj">

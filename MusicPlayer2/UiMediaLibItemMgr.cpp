@@ -319,8 +319,7 @@ void CUiAllTracksMgr::UpdateAllTracks()
     ListItem list_item{ LT_MEDIA_LIB, L"", ListItem::ClassificationType::CT_NONE };
     CRecentList::Instance().LoadItem(list_item);
     //对所有曲目排序
-    auto sort_fun = SongInfo::GetSortFunc(list_item.GetDefaultSortMode());
-    std::stable_sort(tmp_song_list.begin(), tmp_song_list.end(), sort_fun);
+    SongInfo::SortSongs(tmp_song_list, list_item.GetDefaultSortMode());
     std::transform(tmp_song_list.begin(), tmp_song_list.end(), std::back_inserter(m_all_tracks_list), [](const SongInfo& song_info) {
         UTrackInfo item;
         item.song_key = song_info;

@@ -63,6 +63,8 @@ public:
 
     // 读取文件的修改时间属性（FILETIME），返回文件是否存在
     static bool GetFileLastModified(const wstring& file_path, unsigned __int64& modified_time);
+    // Unix milliseconds; added is the earliest valid write/creation/access date.
+    static bool GetFileTrackDates(const wstring& file_path, __int64& added_ms, __int64& modified_ms);
     // 读取文件的创建时间属性（FILETIME），返回文件是否存在
     static bool GetFileCreateTime(const wstring& file_path, unsigned __int64& create_time);
 

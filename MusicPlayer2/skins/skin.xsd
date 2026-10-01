@@ -1299,6 +1299,11 @@
     <xs:annotation>
       <xs:documentation>文本</xs:documentation>
     </xs:annotation>
+    <xs:attribute name="scroll_on_hover" type="xs:boolean" default="false">
+      <xs:annotation>
+        <xs:documentation>Scroll only while hovering over the containing section; otherwise show ellipsis.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
     <xs:attribute name="text" type="xs:string">
       <xs:annotation>
         <xs:documentation>显示的文本。</xs:documentation>
