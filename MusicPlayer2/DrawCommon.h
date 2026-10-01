@@ -175,7 +175,20 @@ public:
         m_memDC.CreateCompatibleDC(NULL);
         if (m_pDC != nullptr)
         {
-            m_memBitmap.CreateCompatibleBitmap(pDC, rect.Width(), rect.Height());
+            // Keep GDI+, GDI and DirectWrite bitmap rendering in CPU memory.
+            BITMAPINFO bitmap_info{};
+            bitmap_info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+            bitmap_info.bmiHeader.biWidth = rect.Width();
+            bitmap_info.bmiHeader.biHeight = -rect.Height();
+            bitmap_info.bmiHeader.biPlanes = 1;
+            bitmap_info.bmiHeader.biBitCount = 32;
+            bitmap_info.bmiHeader.biCompression = BI_RGB;
+            void* pixels{};
+            HBITMAP bitmap = ::CreateDIBSection(pDC->GetSafeHdc(), &bitmap_info, DIB_RGB_COLORS, &pixels, NULL, 0);
+            if (bitmap != NULL)
+                m_memBitmap.Attach(bitmap);
+            else
+                m_memBitmap.CreateCompatibleBitmap(pDC, rect.Width(), rect.Height());
             m_pOldBit = m_memDC.SelectObject(&m_memBitmap);
         }
     }
