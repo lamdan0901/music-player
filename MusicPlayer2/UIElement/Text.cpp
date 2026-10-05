@@ -3,6 +3,7 @@
 #include "Player.h"
 #include "PlayerFormulaHelper.h"
 #include "TinyXml2Helper.h"
+#include "SongInfoHelper.h"
 
 void UiElement::Text::Draw()
 {
@@ -107,30 +108,35 @@ void UiElement::Text::HideTooltip()
 std::wstring UiElement::Text::GetText() const
 {
     std::wstring draw_text{};
+    const SongInfo& song = CPlayer::GetInstance().GetSafeCurrentSongInfo();
     switch (type)
     {
     case UiElement::Text::UserDefine:
         draw_text = text;
         break;
     case UiElement::Text::Title:
-        draw_text = CPlayer::GetInstance().GetSafeCurrentSongInfo().GetTitle();
+        draw_text = CSongInfoHelper::GetDisplayStr(song, DF_TITLE, true);
         break;
     case UiElement::Text::Artist:
-        draw_text = CPlayer::GetInstance().GetSafeCurrentSongInfo().GetArtist();
+        draw_text = song.IsArtistEmpty() ? L"" : song.artist;
         break;
     case UiElement::Text::Album:
         draw_text = CPlayer::GetInstance().GetSafeCurrentSongInfo().GetAlbum();
         break;
     case UiElement::Text::ArtistTitle:
-        draw_text = CPlayer::GetInstance().GetSafeCurrentSongInfo().GetArtist() + L" - " + CPlayer::GetInstance().GetSafeCurrentSongInfo().GetTitle();
+        draw_text = CSongInfoHelper::GetDisplayStr(song, DF_TITLE, true);
+        if (!song.IsArtistEmpty())
+            draw_text = song.artist + L" - " + draw_text;
         break;
     case UiElement::Text::ArtistAlbum:
     {
         //优先使用唱片集艺术家，如果为空，则使用艺术家
         std::wstring artist_display{ CPlayer::GetInstance().GetSafeCurrentSongInfo().album_artist };
         if (artist_display.empty())
-            artist_display = CPlayer::GetInstance().GetSafeCurrentSongInfo().GetArtist();
-        draw_text = artist_display + L" - " + CPlayer::GetInstance().GetSafeCurrentSongInfo().GetAlbum();
+            artist_display = song.IsArtistEmpty() ? L"" : song.artist;
+        draw_text = CPlayer::GetInstance().GetSafeCurrentSongInfo().GetAlbum();
+        if (!artist_display.empty())
+            draw_text = artist_display + L" - " + draw_text;
     }   break;
     case UiElement::Text::Format:
         draw_text = CPlayerUIBase::GetDisplayFormatString();

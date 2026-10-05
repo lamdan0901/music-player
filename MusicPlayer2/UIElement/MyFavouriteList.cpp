@@ -21,7 +21,7 @@ std::wstring UiElement::MyFavouriteList::GetItemText(int row, int col)
             if (row >= 0 && row < CUiMyFavouriteItemMgr::Instance().GetSongCount())
             {
                 const SongInfo& song_info{ CUiMyFavouriteItemMgr::Instance().GetSongInfo(row) };
-                std::wstring display_name{ CSongInfoHelper::GetDisplayStr(song_info, theApp.m_media_lib_setting_data.display_format) };
+                std::wstring display_name{ CSongInfoHelper::GetDisplayStr(song_info, theApp.m_media_lib_setting_data.display_format, true) };
                 return display_name;
             }
         }

@@ -1177,17 +1177,22 @@ void CPlayerUIBase::DrawUIButton(const CRect& rect, UIButton& btn, IconMgr::Icon
 {
     btn.rect = rect;
 
+    bool media_play_button = IsMediaPlayerStyle() && big_icon && text.empty()
+        && (icon_type == IconMgr::IT_Play || icon_type == IconMgr::IT_Pause || icon_type == IconMgr::IT_Play_Pause);
     CRect rc_tmp = rect;
     if (btn.pressed && btn.enable)
-        rc_tmp.MoveToXY(rect.left + theApp.DPI(1), rect.top + theApp.DPI(1));
+    {
+        if (media_play_button)
+            rc_tmp.DeflateRect(DPI(1), DPI(1));
+        else
+            rc_tmp.MoveToXY(rect.left + theApp.DPI(1), rect.top + theApp.DPI(1));
+    }
 
     //rc_tmp.DeflateRect(DPI(2), DPI(2));
     //m_draw.SetDrawArea(rc_tmp);
 
     //绘制的是否为关闭按钮（关闭按钮需要特别处理）
     bool is_close_btn = (&btn == &m_buttons[BTN_CLOSE] || &btn == &m_buttons[BTN_APP_CLOSE]);
-    bool media_play_button = IsMediaPlayerStyle() && big_icon && text.empty()
-        && (icon_type == IconMgr::IT_Play || icon_type == IconMgr::IT_Pause || icon_type == IconMgr::IT_Play_Pause);
 
     //绘制背景
     if (!media_play_button && btn.enable && (btn.pressed || btn.hover || checked || btn_background))
@@ -1230,7 +1235,7 @@ void CPlayerUIBase::DrawUIButton(const CRect& rect, UIButton& btn, IconMgr::Icon
         {
             CPoint center = rc_tmp.CenterPoint();
             CRect ring(center.x - size / 2, center.y - size / 2, center.x - size / 2 + size, center.y - size / 2 + size);
-            BYTE ring_alpha = btn.enable ? (btn.hover || btn.pressed ? 255 : 220) : 96;
+            BYTE ring_alpha = btn.enable ? (btn.hover || btn.pressed ? 255 : 240) : 96;
             Gdiplus::LinearGradientBrush brush(Gdiplus::Point(ring.left, ring.top), Gdiplus::Point(ring.right, ring.bottom),
                 Gdiplus::Color(ring_alpha, 255, 159, 88), Gdiplus::Color(ring_alpha, 183, 105, 207));
             auto* graphics = m_draw.GetGraphics();
@@ -1267,7 +1272,16 @@ void CPlayerUIBase::DrawUIButton(const CRect& rect, UIButton& btn, IconMgr::Icon
         // Center the filled triangle's visual weight, rather than its transparent canvas.
         if (media_play_button && icon_type == IconMgr::IT_Play)
             rect_icon.OffsetRect(DPI(2), 0);
-        DrawUiIcon(rect_icon, icon_type, icon_style, icon_size);
+        if (media_play_button)
+        {
+            const auto source_size = IsDrawLargeIcon() ? IconMgr::IS_DPI_32_Full_Screen : IconMgr::IS_DPI_32;
+            const int glyph_size = IconMgr::GetIconWidth(source_size) * 3 / 4;
+            const CPoint center = rect_icon.CenterPoint();
+            m_draw.DrawIcon(theApp.m_icon_mgr.GetHICON(icon_type, icon_style, source_size),
+                CPoint(center.x - glyph_size / 2, center.y - glyph_size / 2), CSize(glyph_size, glyph_size));
+        }
+        else
+            DrawUiIcon(rect_icon, icon_type, icon_style, icon_size);
     }
 
     //绘制文本

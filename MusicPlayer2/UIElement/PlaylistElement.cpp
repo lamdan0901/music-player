@@ -20,7 +20,7 @@ std::wstring UiElement::Playlist::GetItemText(int row, int col)
         else if (col == COL_TRACK)
         {
             const SongInfo& song_info{ CPlayer::GetInstance().GetSafePlaylistItem(row) };
-            std::wstring display_name{ CSongInfoHelper::GetDisplayStr(song_info, theApp.m_media_lib_setting_data.display_format) };
+            std::wstring display_name{ CSongInfoHelper::GetDisplayStr(song_info, theApp.m_media_lib_setting_data.display_format, true) };
             return display_name;
         }
         //时间
