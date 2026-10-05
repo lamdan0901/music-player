@@ -231,7 +231,7 @@ void CUISongListMgr::Update(const vector<SongInfo>& song_list)
     {
         UTrackInfo item;
         item.song_key = song_info;
-        item.name = CSongInfoHelper::GetDisplayStr(song_info, theApp.m_media_lib_setting_data.display_format);
+        item.name = CSongInfoHelper::GetDisplayStr(song_info, theApp.m_media_lib_setting_data.display_format, true);
         item.length = song_info.length();
         item.is_favourite = CUiMyFavouriteItemMgr::Instance().Contains(song_info);
         m_all_tracks_list.emplace_back(item);
@@ -323,7 +323,7 @@ void CUiAllTracksMgr::UpdateAllTracks()
     std::transform(tmp_song_list.begin(), tmp_song_list.end(), std::back_inserter(m_all_tracks_list), [](const SongInfo& song_info) {
         UTrackInfo item;
         item.song_key = song_info;
-        item.name = CSongInfoHelper::GetDisplayStr(song_info, theApp.m_media_lib_setting_data.display_format);
+        item.name = CSongInfoHelper::GetDisplayStr(song_info, theApp.m_media_lib_setting_data.display_format, true);
         item.length = song_info.length();
         item.is_favourite = CUiMyFavouriteItemMgr::Instance().Contains(song_info);
         return item;

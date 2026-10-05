@@ -3,6 +3,7 @@
 #include "Common.h"
 #include "AudioCommon.h"
 #include "MusicPlayer2.h"
+#include "FilePathHelper.h"
 
 CString CSongInfoHelper::GetBitrateString(const SongInfo& song)
 {
@@ -74,8 +75,10 @@ CSongInfoHelper::ChannelInfo CSongInfoHelper::GetSongChannelInfo(const SongInfo&
     return channel_info;
 }
 
-std::wstring CSongInfoHelper::GetDisplayStr(const SongInfo& song_info, DisplayFormat display_format)
+std::wstring CSongInfoHelper::GetDisplayStr(const SongInfo& song_info, DisplayFormat display_format, bool hide_file_extension)
 {
+    const std::wstring file_name = hide_file_extension && !CCommon::IsURL(song_info.file_path)
+        ? CFilePathHelper(song_info.GetFileName()).GetFileNameWithoutExtension() : song_info.GetFileName();
     AudioType type{ CAudioCommon::GetAudioTypeByFileName(song_info.file_path) };
     if (type == AU_MIDI)		//MIDI只显示文件名
     {
@@ -84,16 +87,16 @@ std::wstring CSongInfoHelper::GetDisplayStr(const SongInfo& song_info, DisplayFo
     switch (display_format)
     {
     case DF_FILE_NAME:		//显示为文件名
-        return song_info.GetFileName();
+        return file_name;
     case DF_TITLE:			//显示为歌曲标题
         if (song_info.IsTitleEmpty())	//如果获取不到歌曲标题，就显示文件名
-            return song_info.GetFileName();
+            return file_name;
         else
             return song_info.title;
     case DF_ARTIST_TITLE:	//显示为艺术家 - 标题
         if (song_info.IsTitleEmpty() && song_info.IsArtistEmpty())		//如果标题和艺术家都获取不到，就显示文件名
         {
-            return song_info.GetFileName();
+            return file_name;
         }
         else
         {
@@ -105,7 +108,7 @@ std::wstring CSongInfoHelper::GetDisplayStr(const SongInfo& song_info, DisplayFo
     case DF_TITLE_ARTIST:	//显示为标题 - 艺术家
         if (song_info.IsTitleEmpty() && song_info.IsArtistEmpty())		//如果标题和艺术家都获取不到，就显示文件名
         {
-            return song_info.GetFileName();
+            return file_name;
         }
         else
         {
@@ -115,7 +118,7 @@ std::wstring CSongInfoHelper::GetDisplayStr(const SongInfo& song_info, DisplayFo
                 return (song_info.GetTitle() + _T(" - ") + song_info.GetArtist());
         }
     default:
-        return song_info.GetFileName();
+        return file_name;
     }
 }
 

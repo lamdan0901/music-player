@@ -26,3 +26,6 @@ if /i not "%CONFIG%"=="Debug" xcopy /d /y /q "%OUTDIR%Debug\bass*.dll" "%OUTDIR%
 
 :: Release exe loads skins/language/etc. from its own folder; only 2 built-in UIs show without them.
 for %%d in (skins language Encoder Plugins) do xcopy /e /i /d /y /q "%~dp0MusicPlayer2\%%d" "%OUTDIR%%CONFIG%\%%d\" >nul
+
+:: Replace bundled Win32 plugins with their x64 versions for 64-bit builds.
+if /i "%PLATFORM%"=="x64" xcopy /y /q "%~dp0MusicPlayer2\Plugins\Win64\*.dll" "%OUTDIR%%CONFIG%\Plugins\" >nul

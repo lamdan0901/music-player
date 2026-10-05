@@ -48,7 +48,7 @@
               <horizontalLayout height="60" width="36%">
                 <button key="repeatMode" width="28" height="28" margin="2"/>
                 <button key="previous" width="40" height="40" bigIcon="true" margin="2"/>
-                <button key="playPause" width="44" height="44" bigIcon="true" margin="2"/>
+                <button key="playPause" width="48" height="48" bigIcon="true" margin="2"/>
                 <button key="next" width="40" height="40" bigIcon="true" margin="2"/>
                 <button key="favorite" width="28" height="28" margin="2"/>
               </horizontalLayout>
@@ -93,7 +93,7 @@
                 <text type="format" style="scroll" height="24"/>
               </verticalLayout>
               <button key="previous" width="40" height="40" bigIcon="true" margin="2"/>
-              <button key="playPause" width="44" height="44" bigIcon="true" margin="2"/>
+              <button key="playPause" width="48" height="48" bigIcon="true" margin="2"/>
               <button key="next" width="40" height="40" bigIcon="true" margin="2"/>
               <volume show_text="false" width="28" height="28" margin="2"/>
               <trackGain width="28" height="28" margin="2"/>
@@ -263,7 +263,7 @@
             <horizontalLayout height="60" width="36%">
               <button key="repeatMode" width="28" height="28" margin="2"/>
               <button key="previous" width="40" height="40" bigIcon="true" margin="2"/>
-              <button key="playPause" width="44" height="44" bigIcon="true" margin="2"/>
+              <button key="playPause" width="48" height="48" bigIcon="true" margin="2"/>
               <button key="next" width="40" height="40" bigIcon="true" margin="2"/>
               <button key="favorite" width="28" height="28" margin="2"/>
             </horizontalLayout>
@@ -430,7 +430,7 @@
               <text type="artist" color_style="emphasis2" style="scroll" scroll_on_hover="true" height="24"/>
             </verticalLayout>
             <button key="previous" width="40" height="40" bigIcon="true" margin="2"/>
-            <button key="playPause" width="44" height="44" bigIcon="true" margin="2"/>
+            <button key="playPause" width="48" height="48" bigIcon="true" margin="2"/>
             <button key="next" width="40" height="40" bigIcon="true" margin="2"/>
             <volume show_text="false" width="28" height="28" margin="2"/>
             <trackGain width="28" height="28" margin="2"/>
@@ -467,7 +467,7 @@
             <button key="repeatMode" width="26" height="26" margin="2"/>
             <button key="favorite" width="26" height="26" margin="2"/>
             <button key="previous" width="40" height="40" bigIcon="true" margin="2"/>
-            <button key="playPause" width="44" height="44" bigIcon="true" margin="2"/>
+            <button key="playPause" width="48" height="48" bigIcon="true" margin="2"/>
             <button key="next" width="40" height="40" bigIcon="true" margin="2"/>
             <volume show_text="false" width="26" height="26" margin="2"/>
             <trackGain width="26" height="26" margin="2"/>
