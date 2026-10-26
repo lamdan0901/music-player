@@ -227,7 +227,8 @@ wstring CAudioTag::GetAlbumCover(int& image_type, const wchar_t* file_name, size
         image_contents = CTagLibHelper::GetTtaAlbumCover(m_song_info.file_path, image_type);
         break;
     case AU_OPUS:
-        //image_contents = CTagLibHelper::GetOpusAlbumCover(m_song_info.file_path, image_type);
+        //TagLib reads opus files very fast (<1ms in practice), so cover reading is restored here; tag read/write remains disabled
+        image_contents = CTagLibHelper::GetOpusAlbumCover(m_song_info.file_path, image_type);
         break;
     case AU_SPX:
         image_contents = CTagLibHelper::GetSpxAlbumCover(m_song_info.file_path, image_type);
