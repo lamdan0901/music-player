@@ -15,7 +15,6 @@
 #include "MediaLibHelper.h"
 #include "SongMultiVersion.h"
 #include "md5.h"
-#include <numeric>
 
 CPlayer CPlayer::m_instance;
 
@@ -2270,14 +2269,13 @@ void CPlayer::ReIniPlayerCore(bool replay)
     GetPlayStatusMutex().unlock();
 }
 
-void CPlayer::SortPlaylist(bool is_init, SortMode sort_override)
+void CPlayer::SortPlaylist(bool is_init)
 {
     if (m_loading && !is_init) return;
     CWaitCursor wait_cursor;
     SongInfo current_song = GetCurrentSongInfo();
-    ASSERT(m_sort_mode != SM_UNSORT || sort_override != SM_UNSORT);
-    const SortMode effective_sort = sort_override != SM_UNSORT ? sort_override :
-        (m_sort_mode == SM_UNSORT ? SM_U_FILE : m_sort_mode);
+    ASSERT(m_sort_mode != SM_UNSORT);
+    const SortMode effective_sort = m_sort_mode == SM_UNSORT ? SM_U_FILE : m_sort_mode;
     SongInfo::SortSongs(m_playlist, effective_sort);
 
     if (!is_init)   // 由初始化完成方法调用时不重新查找index
@@ -2299,6 +2297,8 @@ void CPlayer::SortPlaylist(bool is_init, SortMode sort_override)
     }
     OnPlaylistChange();
     SaveCurrentPlaylist();
+    if (!is_init)
+        SaveRecentInfoToFiles(false);
 }
 
 bool CPlayer::HasCustomOrder() const
@@ -2329,24 +2329,7 @@ void CPlayer::ApplyCustomOrder()
         return;
     CPlaylistFile playlist_file;
     playlist_file.LoadFromFile(file_path);
-    std::map<SongKey, int> order;
-    for (const auto& song : playlist_file.GetPlaylist())
-        order.emplace(SongKey(song), static_cast<int>(order.size()));
-    std::vector<int> ranks;
-    for (const auto& song : m_playlist)
-    {
-        auto iter = order.find(SongKey(song));
-        ranks.push_back(iter != order.end() ? iter->second : INT_MAX);  // 新增的曲目排在最后
-    }
-    // 按rank稳定排序，新增的曲目之间保持原排序方式的顺序，已移除的曲目自然被忽略
-    std::vector<size_t> indexes(m_playlist.size());
-    std::iota(indexes.begin(), indexes.end(), 0);
-    std::stable_sort(indexes.begin(), indexes.end(), [&](size_t a, size_t b) { return ranks[a] < ranks[b]; });
-    vector<SongInfo> playlist;
-    playlist.reserve(m_playlist.size());
-    for (size_t i : indexes)
-        playlist.push_back(std::move(m_playlist[i]));
-    m_playlist = std::move(playlist);
+    playlist_file.ApplyCustomOrder(m_playlist);
 }
 
 void CPlayer::OnExit()

@@ -1684,7 +1684,7 @@ void CMusicPlayerDlg::SetMenuState(CMenu* pMenu)
     // 设置播放列表菜单中排序方式的图标
     const CBitmap* bitmap_sort_up = theApp.m_menu_mgr.GetMenuBitmap(IconMgr::IconType::IT_Triangle_Up);
     const CBitmap* bitmap_sort_down = theApp.m_menu_mgr.GetMenuBitmap(IconMgr::IconType::IT_Triangle_Down);
-    std::array<const CBitmap*, 9> pSortBitmap{};
+    std::array<const CBitmap*, 10> pSortBitmap{};
     switch (has_custom_order ? SM_UNSORT : CPlayer::GetInstance().m_sort_mode)     //使用自定义顺序时不显示排序方式图标
     {
     case SM_U_FILE: pSortBitmap[0] = bitmap_sort_up; break;
@@ -1705,6 +1705,7 @@ void CMusicPlayerDlg::SetMenuState(CMenu* pMenu)
     case SM_D_TIME: pSortBitmap[7] = bitmap_sort_down; break;
     case SM_U_ADDED: pSortBitmap[8] = bitmap_sort_up; break;
     case SM_D_ADDED: pSortBitmap[8] = bitmap_sort_down; break;
+    case SM_RECENT_ADDED: pSortBitmap[9] = bitmap_sort_down; break;
     default: break;
     }
     pMenu->SetMenuItemBitmaps(ID_SORT_BY_FILE, MF_BYCOMMAND, pSortBitmap[0], NULL);
@@ -1716,6 +1717,7 @@ void CMusicPlayerDlg::SetMenuState(CMenu* pMenu)
     pMenu->SetMenuItemBitmaps(ID_SORT_BY_LISTEN_TIME, MF_BYCOMMAND, pSortBitmap[6], NULL);
     pMenu->SetMenuItemBitmaps(ID_SORT_BY_MODIFIED_TIME, MF_BYCOMMAND, pSortBitmap[7], NULL);
     pMenu->SetMenuItemBitmaps(ID_SORT_BY_ADDED_TIME, MF_BYCOMMAND, pSortBitmap[8], NULL);
+    pMenu->SetMenuItemBitmaps(ID_SORT_RECENTLY_ADDED, MF_BYCOMMAND, pSortBitmap[9], NULL);
     const auto date_sort_mode = CPlayer::GetInstance().m_sort_mode;
     const bool can_reverse_date = date_sort_mode == SM_U_TIME || date_sort_mode == SM_D_TIME ||
         date_sort_mode == SM_U_ADDED || date_sort_mode == SM_D_ADDED;
@@ -3790,8 +3792,8 @@ void CMusicPlayerDlg::OnSortByAddedTime()
 
 void CMusicPlayerDlg::OnSortRecentlyAdded()
 {
-    // One-shot ordering; keep the ordinary sort key and direction.
-    CPlayer::GetInstance().SortPlaylist(false, SM_RECENT_ADDED);
+    CPlayer::GetInstance().m_sort_mode = SM_RECENT_ADDED;
+    CPlayer::GetInstance().SortPlaylist();
     ShowPlayList();
 }
 

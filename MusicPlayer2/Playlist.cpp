@@ -141,6 +141,32 @@ const vector<SongInfo>& CPlaylistFile::GetPlaylist() const
     return m_playlist;
 }
 
+void CPlaylistFile::ApplyCustomOrder(vector<SongInfo>& songs) const
+{
+    std::map<SongKey, int> order;
+    for (const auto& song : m_playlist)
+        order.emplace(SongKey(song), static_cast<int>(order.size()));
+    std::vector<int> ranks(songs.size(), -1);
+    std::vector<size_t> indexes;
+    for (size_t i{}; i < songs.size(); ++i)
+    {
+        auto iter = order.find(SongKey(songs[i]));
+        if (iter != order.end())
+        {
+            ranks[i] = iter->second;
+            indexes.push_back(i);
+        }
+    }
+    std::stable_sort(indexes.begin(), indexes.end(), [&](size_t a, size_t b) { return ranks[a] < ranks[b]; });
+    vector<SongInfo> playlist;
+    playlist.reserve(songs.size());
+    size_t next{};
+    // Only saved tracks trade places; new tracks keep the active sort's positions.
+    for (size_t i{}; i < songs.size(); ++i)
+        playlist.push_back(std::move(songs[ranks[i] >= 0 ? indexes[next++] : i]));
+    songs = std::move(playlist);
+}
+
 int CPlaylistFile::AddSongsToPlaylist(const vector<SongInfo>& songs, bool insert_begin)
 {
     int added{};

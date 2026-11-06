@@ -2,6 +2,7 @@
 #include "../MusicPlayer2/Define.h"
 #include "../MusicPlayer2/Common.h"
 #include "../MusicPlayer2/SongInfo.h"
+#include "../MusicPlayer2/Playlist.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -10,6 +11,45 @@ namespace UnitTest
     TEST_CLASS(DateSorting)
     {
     public:
+        TEST_METHOD(CustomOrderKeepsNewTracksAtSortedPositions)
+        {
+            CPlaylistFile saved_order;
+            std::vector<SongInfo> saved(4);
+            for (size_t i{}; i < saved.size(); ++i)
+                saved[i].file_path = std::wstring(1, L"CABR"[i]);
+            saved_order.AddSongsToPlaylist(saved);
+            auto check = [&](const wchar_t* sorted, const wchar_t* expected) {
+                std::vector<SongInfo> songs;
+                for (wchar_t name : std::wstring(sorted))
+                {
+                    SongInfo song;
+                    song.file_path = std::wstring(1, name);
+                    songs.push_back(song);
+                }
+                saved_order.ApplyCustomOrder(songs);
+                std::wstring actual;
+                for (const auto& song : songs)
+                    actual += song.file_path;
+                Assert::AreEqual(expected, actual.c_str());
+            };
+            check(L"NABC", L"NCAB");
+            check(L"ABCN", L"CABN");
+            check(L"ANBC", L"CNAB");
+            check(L"NABMCZ", L"NCAMBZ");
+            check(L"NAC", L"NCA");
+            check(L"ABC", L"CAB");
+            check(L"NM", L"NM");
+            check(L"", L"");
+
+            // A later reorder includes earlier additions, but still leaves fresh ones alone.
+            std::vector<SongInfo> later = saved;
+            for (size_t i{}; i < later.size(); ++i)
+                later[i].file_path = std::wstring(1, L"NBAC"[i]);
+            saved_order = CPlaylistFile{};
+            saved_order.AddSongsToPlaylist(later);
+            check(L"XABCN", L"XNBAC");
+        }
+
         TEST_METHOD(DateKeysAndRecentlyAddedMatchNamidaFixture)
         {
             std::vector<SongInfo> tracks(4);

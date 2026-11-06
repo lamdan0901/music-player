@@ -16,6 +16,8 @@ public:
     void SaveToFile(const wstring& file_path, Type type = PL_PLAYLIST) const;
     const vector<SongInfo>& GetPlaylist() const;
     int AddSongsToPlaylist(const vector<SongInfo>& songs, bool insert_begin = false);
+    // Restore saved relative order while leaving new tracks in their sorted positions.
+    void ApplyCustomOrder(vector<SongInfo>& songs) const;
     // 使用移动语义覆盖参数song_list，调用后此CPlaylistFile对象不再可用
     void MoveToSongList(vector<SongInfo>& song_list);
     bool IsSongInPlaylist(const SongInfo& song);
