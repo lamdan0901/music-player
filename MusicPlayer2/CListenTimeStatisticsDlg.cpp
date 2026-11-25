@@ -7,6 +7,7 @@
 #include "SongDataManager.h"
 #include "FilterHelper.h"
 #include "AudioCommon.h"
+#include "SongInfoHelper.h"
 
 
 // CListenTimeStatisticsDlg 对话框
@@ -89,14 +90,7 @@ void CListenTimeStatisticsDlg::ShowData(bool size_changed)
 CListenTimeStatisticsDlg::ListItem CListenTimeStatisticsDlg::SongInfoToListItem(const SongInfo& song)
 {
     ListItem list_item;
-    if (song.IsTitleEmpty() || CAudioCommon::GetAudioTypeByFileName(song.file_path) == AU_MIDI)
-    {
-        list_item.name = song.GetFileName().c_str();
-    }
-    else
-    {
-        list_item.name = (song.GetArtist() + L" - " + song.GetTitle()).c_str();
-    }
+    list_item.name = CSongInfoHelper::GetDisplayStr(song, DF_ARTIST_TITLE).c_str();
 
     list_item.path = song.file_path;
     list_item.total_time = CPlayTime(song.listen_time * 1000);

@@ -304,7 +304,7 @@ UINT CLyricBatchDownloadDlg::ThreadFunc(LPVOID lpParam)
         //保存到歌词文件
         if (cur_song.is_cue || COSUPlayerHelper::IsOsuFile(cur_song.file_path) || save_to_lyric_folder)
         {
-            file_name = CSongInfoHelper::GetDisplayStr(cur_song, DF_ARTIST_TITLE);
+            file_name = CSongInfoHelper::GetDisplayStr(cur_song, DF_ARTIST_TITLE, true);
             CCommon::FileNameNormalize(file_name);
             dir = theApp.m_lyric_setting_data.AbsoluteLyricPath();
         }

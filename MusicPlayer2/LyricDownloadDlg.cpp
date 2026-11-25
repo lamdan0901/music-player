@@ -98,7 +98,7 @@ wstring CLyricDownloadDlg::GetLyricFileName()
 	//cur、osu，或保存到歌词文件夹时，使用“艺术家-标题”格式命名
 	if (m_song.is_cue || CPlayer::GetInstance().IsOsuFile() || save_to_lyric_folder)
 	{
-		lyric_name = CSongInfoHelper::GetDisplayStr(m_song, DF_ARTIST_TITLE);
+		lyric_name = CSongInfoHelper::GetDisplayStr(m_song, DF_ARTIST_TITLE, true);
 		CCommon::FileNameNormalize(lyric_name);
 	}
 	else

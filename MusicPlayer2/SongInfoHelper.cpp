@@ -94,29 +94,17 @@ std::wstring CSongInfoHelper::GetDisplayStr(const SongInfo& song_info, DisplayFo
         else
             return song_info.title;
     case DF_ARTIST_TITLE:	//显示为艺术家 - 标题
-        if (song_info.IsTitleEmpty() && song_info.IsArtistEmpty())		//如果标题和艺术家都获取不到，就显示文件名
-        {
-            return file_name;
-        }
-        else
-        {
-            if (CCommon::IsURL(song_info.file_path) && song_info.IsArtistEmpty())
-                return song_info.GetTitle();
-            else
-                return (song_info.GetArtist() + _T(" - ") + song_info.GetTitle());
-        }
     case DF_TITLE_ARTIST:	//显示为标题 - 艺术家
-        if (song_info.IsTitleEmpty() && song_info.IsArtistEmpty())		//如果标题和艺术家都获取不到，就显示文件名
+        // Only combine when both are known; never show "<Unknown Artist>" / "<Unknown Title>" placeholders
+        if (!song_info.IsTitleEmpty() && !song_info.IsArtistEmpty())
         {
-            return file_name;
+            return display_format == DF_ARTIST_TITLE ? song_info.artist + L" - " + song_info.title
+                                                     : song_info.title + L" - " + song_info.artist;
         }
-        else
-        {
-            if (CCommon::IsURL(song_info.file_path) && song_info.IsArtistEmpty())
-                return song_info.GetTitle();
-            else
-                return (song_info.GetTitle() + _T(" - ") + song_info.GetArtist());
-        }
+        // URL / cue track: file name is a URL / the whole-album file, so the title is the better name
+        if (!song_info.IsTitleEmpty() && (CCommon::IsURL(song_info.file_path) || song_info.is_cue))
+            return song_info.title;
+        return file_name;
     default:
         return file_name;
     }
